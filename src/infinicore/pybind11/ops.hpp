@@ -6,6 +6,7 @@
 #include "ops/attention.hpp"
 #include "ops/causal_softmax.hpp"
 #include "ops/embedding.hpp"
+#include "ops/floor.hpp"
 #include "ops/linear.hpp"
 #include "ops/matmul.hpp"
 #include "ops/mul.hpp"
@@ -25,6 +26,7 @@ inline void bind(py::module &m) {
     bind_attention(m);
     bind_causal_softmax(m);
     bind_random_sample(m);
+    bind_floor(m);
     bind_linear(m);
     bind_matmul(m);
     bind_mul(m);

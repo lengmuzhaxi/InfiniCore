@@ -40,6 +40,7 @@ from infinicore.dtype import (
 )
 from infinicore.ops.add import add
 from infinicore.ops.attention import attention
+from infinicore.ops.floor import floor
 from infinicore.ops.matmul import matmul
 from infinicore.ops.mul import mul
 from infinicore.ops.narrow import narrow
@@ -105,6 +106,7 @@ __all__ = [
     "rearrange",
     "empty",
     "empty_like",
+    "floor",
     "from_blob",
     "from_list",
     "from_numpy",
