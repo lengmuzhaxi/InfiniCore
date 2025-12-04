@@ -1,8 +1,11 @@
 #pragma once
 
 #include <pybind11/pybind11.h>
-
+#include "ops/acos.hpp"
+#include "ops/adaptive_avg_pool1d.hpp"
+#include "ops/addbmm.hpp"
 #include "ops/add.hpp"
+#include "ops/affine_grid.hpp" // [新增] 引入头文件
 #include "ops/attention.hpp"
 #include "ops/causal_softmax.hpp"
 #include "ops/embedding.hpp"
@@ -22,7 +25,11 @@ namespace py = pybind11;
 namespace infinicore::ops {
 
 inline void bind(py::module &m) {
+    bind_acos(m);
+    bind_adaptive_avg_pool1d(m);
     bind_add(m);
+    bind_affine_grid(m); // [新增] 绑定函数
+    bind_addbmm(m);
     bind_attention(m);
     bind_causal_softmax(m);
     bind_random_sample(m);

@@ -12,7 +12,10 @@ os.chdir(PROJECT_DIR)
 def run_tests(args):
     failed = []
     for test in [
+        "acos.py",
+        "adaptive_avg_pool1d.py",
         "add.py",
+        "addbmm.py",
         "attention.py",
         "causal_softmax.py",
         "clip.py",
