@@ -1,4 +1,4 @@
-#include "../../operator.h" // 必须包含：定义了 InfiniopDescriptor 基类
+#include "../../operator.h"
 #include "../../handle.h"
 #include "infiniop/ops/affine_grid.h"
 
@@ -8,6 +8,11 @@
 #endif
 #if defined(ENABLE_NVIDIA_API) || defined(ENABLE_ILUVATAR_API) || defined(ENABLE_QY_API)
 #include "nvidia/affine_grid_nvidia.cuh"
+#endif
+
+// 【新增】引入 Moore 后端的 API 头文件
+#ifdef ENABLE_MOORE_API
+#include "moore/affine_grid_moore.h"
 #endif
 
 // 其他后端暂省略
@@ -31,7 +36,7 @@ __C infiniStatus_t infiniopCreateAffineGridDescriptor(
             input_desc,                                                              \
             align_corners) 
 
-    switch (handle->device) { // handle->device 是可以直接访问的，不需要转换
+    switch (handle->device) { 
 
 #ifdef ENABLE_CPU_API
         CREATE(INFINI_DEVICE_CPU, cpu);
@@ -39,6 +44,11 @@ __C infiniStatus_t infiniopCreateAffineGridDescriptor(
 #ifdef ENABLE_NVIDIA_API
         CREATE(INFINI_DEVICE_NVIDIA, nvidia);
 #endif
+// 【新增】Moore 后端分发
+#ifdef ENABLE_MOORE_API
+        CREATE(INFINI_DEVICE_MOORE, moore);
+#endif
+
 /*
 #ifdef ENABLE_ILUVATAR_API
         CREATE(INFINI_DEVICE_ILUVATAR, nvidia);
@@ -56,12 +66,11 @@ __C infiniStatus_t infiniopCreateAffineGridDescriptor(
 
 __C infiniStatus_t infiniopGetAffineGridWorkspaceSize(infiniopAffineGridDescriptor_t desc, size_t *size) {
 
-#define GET(CASE, NAMESPACE)                                                              \
-    case CASE:                                                                            \
+#define GET(CASE, NAMESPACE)                                                                      \
+    case CASE:                                                                                    \
         *size = reinterpret_cast<op::affine_grid::NAMESPACE::Descriptor *>(desc)->workspaceSize(); \
         return INFINI_STATUS_SUCCESS
 
-    // 【修正】必须强制转换为 InfiniopDescriptor* 才能访问 device_type
     switch (reinterpret_cast<InfiniopDescriptor *>(desc)->device_type) {
 #ifdef ENABLE_CPU_API
         GET(INFINI_DEVICE_CPU, cpu);
@@ -69,6 +78,11 @@ __C infiniStatus_t infiniopGetAffineGridWorkspaceSize(infiniopAffineGridDescript
 #ifdef ENABLE_NVIDIA_API
         GET(INFINI_DEVICE_NVIDIA, nvidia);
 #endif
+// 【新增】Moore 后端分发
+#ifdef ENABLE_MOORE_API
+        GET(INFINI_DEVICE_MOORE, moore);
+#endif
+
 /*
 #ifdef ENABLE_ILUVATAR_API
         GET(INFINI_DEVICE_ILUVATAR, nvidia);
@@ -98,7 +112,6 @@ __C infiniStatus_t infiniopAffineGrid(
         return reinterpret_cast<const op::affine_grid::NAMESPACE::Descriptor *>(desc) \
             ->calculate(workspace, workspace_size, output, input, stream)
 
-    // 【修正】必须强制转换为 InfiniopDescriptor* 才能访问 device_type
     switch (reinterpret_cast<InfiniopDescriptor *>(desc)->device_type) {
 
 #ifdef ENABLE_CPU_API
@@ -107,6 +120,11 @@ __C infiniStatus_t infiniopAffineGrid(
 #ifdef ENABLE_NVIDIA_API
         CALCULATE(INFINI_DEVICE_NVIDIA, nvidia);
 #endif
+// 【新增】Moore 后端分发
+#ifdef ENABLE_MOORE_API
+        CALCULATE(INFINI_DEVICE_MOORE, moore);
+#endif
+
 /*
 #ifdef ENABLE_ILUVATAR_API
         CALCULATE(INFINI_DEVICE_ILUVATAR, nvidia);
@@ -126,12 +144,11 @@ __C infiniStatus_t infiniopAffineGrid(
 __C infiniStatus_t
 infiniopDestroyAffineGridDescriptor(infiniopAffineGridDescriptor_t desc) {
 
-#define DELETE(CASE, NAMESPACE)                                                            \
-    case CASE:                                                                             \
-        delete reinterpret_cast<const op::affine_grid::NAMESPACE::Descriptor *>(desc);     \
+#define DELETE(CASE, NAMESPACE)                                                                    \
+    case CASE:                                                                                     \
+        delete reinterpret_cast<const op::affine_grid::NAMESPACE::Descriptor *>(desc);             \
         return INFINI_STATUS_SUCCESS
 
-    // 【修正】必须强制转换为 InfiniopDescriptor* 才能访问 device_type
     switch (reinterpret_cast<InfiniopDescriptor *>(desc)->device_type) {
 
 #ifdef ENABLE_CPU_API
@@ -140,6 +157,11 @@ infiniopDestroyAffineGridDescriptor(infiniopAffineGridDescriptor_t desc) {
 #ifdef ENABLE_NVIDIA_API
         DELETE(INFINI_DEVICE_NVIDIA, nvidia);
 #endif
+// 【新增】Moore 后端分发
+#ifdef ENABLE_MOORE_API
+        DELETE(INFINI_DEVICE_MOORE, moore);
+#endif
+
 /*
 #ifdef ENABLE_ILUVATAR_API
         DELETE(INFINI_DEVICE_ILUVATAR, nvidia);

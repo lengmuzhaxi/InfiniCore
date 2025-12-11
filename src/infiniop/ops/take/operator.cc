@@ -13,6 +13,9 @@
 #ifdef ENABLE_METAX_API
 #include "metax/take_metax.h"
 #endif
+#ifdef ENABLE_MOORE_API
+#include "moore/take_moore.h"
+#endif
 
 extern "C" {
 
@@ -26,14 +29,15 @@ __C infiniStatus_t infiniopCreateTakeDescriptor(
     infiniopTensorDescriptor_t input,
     infiniopTensorDescriptor_t indices) {
 
-    // 【修改点】Create 接收 input 和 indices，直接传递给后端 create 函数
-    #define CREATE(CASE, NAMESPACE)                                                 \
-        case CASE:                                                                  \
-            return op::take::NAMESPACE::Descriptor::create(                         \
-                handle,                                                             \
-                reinterpret_cast<op::take::NAMESPACE::Descriptor **>(desc_ptr),     \
-                output,                                                             \
-                input,                                                              \
+    // 使用 CREATE 宏分发到具体的后端实现
+    // 注意：Take 算子 Descriptor::create 接收 (handle, desc_ptr, output, input, indices)
+    #define CREATE(CASE, NAMESPACE)                                             \
+        case CASE:                                                              \
+            return op::take::NAMESPACE::Descriptor::create(                     \
+                handle,                                                         \
+                reinterpret_cast<op::take::NAMESPACE::Descriptor **>(desc_ptr), \
+                output,                                                         \
+                input,                                                          \
                 indices)
 
     switch (handle->device) {
@@ -52,11 +56,9 @@ __C infiniStatus_t infiniopCreateTakeDescriptor(
     #ifdef ENABLE_METAX_API
         CREATE(INFINI_DEVICE_METAX, metax);
     #endif
-    /*
     #ifdef ENABLE_MOORE_API
         CREATE(INFINI_DEVICE_MOORE, moore);
     #endif
-    */
     default:
         return INFINI_STATUS_DEVICE_TYPE_NOT_SUPPORTED;
     }
@@ -68,9 +70,9 @@ __C infiniStatus_t infiniopCreateTakeDescriptor(
 // =======================================================================
 __C infiniStatus_t infiniopGetTakeWorkspaceSize(infiniopTakeDescriptor_t desc, size_t *size) {
 
-    #define GET(CASE, NAMESPACE)                                                             \
-        case CASE:                                                                           \
-            *size = reinterpret_cast<op::take::NAMESPACE::Descriptor *>(desc)->workspaceSize(); \
+    #define GET(CASE, NAMESPACE)                                                                    \
+        case CASE:                                                                                  \
+            *size = reinterpret_cast<op::take::NAMESPACE::Descriptor *>(desc)->workspaceSize();     \
             return INFINI_STATUS_SUCCESS
 
     switch (desc->device_type) {
@@ -80,7 +82,6 @@ __C infiniStatus_t infiniopGetTakeWorkspaceSize(infiniopTakeDescriptor_t desc, s
     #ifdef ENABLE_NVIDIA_API
         GET(INFINI_DEVICE_NVIDIA, nvidia);
     #endif
-    /*
     #ifdef ENABLE_ILUVATAR_API
         GET(INFINI_DEVICE_ILUVATAR, nvidia);
     #endif
@@ -93,13 +94,10 @@ __C infiniStatus_t infiniopGetTakeWorkspaceSize(infiniopTakeDescriptor_t desc, s
     #ifdef ENABLE_MOORE_API
         GET(INFINI_DEVICE_MOORE, moore);
     #endif
-    */
     default:
         return INFINI_STATUS_DEVICE_TYPE_NOT_SUPPORTED;
     }
     #undef GET
-
-    return INFINI_STATUS_DEVICE_TYPE_NOT_SUPPORTED;
 }
 
 // =======================================================================
@@ -114,7 +112,8 @@ __C infiniStatus_t infiniopTake(
     const void *indices,
     void *stream) {
 
-    // 【修改点】calculate 接收 input 和 indices，直接传递
+    // 使用 CALCULATE 宏分发
+    // calculate 接口通常为: (workspace, size, output, input, indices, stream)
     #define CALCULATE(CASE, NAMESPACE)                                          \
         case CASE:                                                              \
             return reinterpret_cast<const op::take::NAMESPACE::Descriptor *>(desc) \
@@ -127,7 +126,6 @@ __C infiniStatus_t infiniopTake(
     #ifdef ENABLE_NVIDIA_API
         CALCULATE(INFINI_DEVICE_NVIDIA, nvidia);
     #endif
-    /*
     #ifdef ENABLE_ILUVATAR_API
         CALCULATE(INFINI_DEVICE_ILUVATAR, nvidia);
     #endif
@@ -140,7 +138,6 @@ __C infiniStatus_t infiniopTake(
     #ifdef ENABLE_MOORE_API
         CALCULATE(INFINI_DEVICE_MOORE, moore);
     #endif
-    */
     default:
         return INFINI_STATUS_DEVICE_TYPE_NOT_SUPPORTED;
     }
@@ -152,9 +149,9 @@ __C infiniStatus_t infiniopTake(
 // =======================================================================
 __C infiniStatus_t infiniopDestroyTakeDescriptor(infiniopTakeDescriptor_t desc) {
 
-    #define DELETE(CASE, NAMESPACE)                                            \
-        case CASE:                                                             \
-            delete reinterpret_cast<const op::take::NAMESPACE::Descriptor *>(desc); \
+    #define DELETE(CASE, NAMESPACE)                                                          \
+        case CASE:                                                                           \
+            delete reinterpret_cast<const op::take::NAMESPACE::Descriptor *>(desc);          \
             return INFINI_STATUS_SUCCESS
 
     switch (desc->device_type) {
@@ -164,7 +161,6 @@ __C infiniStatus_t infiniopDestroyTakeDescriptor(infiniopTakeDescriptor_t desc) 
     #ifdef ENABLE_NVIDIA_API
         DELETE(INFINI_DEVICE_NVIDIA, nvidia);
     #endif
-    /*
     #ifdef ENABLE_ILUVATAR_API
         DELETE(INFINI_DEVICE_ILUVATAR, nvidia);
     #endif
@@ -177,7 +173,6 @@ __C infiniStatus_t infiniopDestroyTakeDescriptor(infiniopTakeDescriptor_t desc) 
     #ifdef ENABLE_MOORE_API
         DELETE(INFINI_DEVICE_MOORE, moore);
     #endif
-    */
     default:
         return INFINI_STATUS_DEVICE_TYPE_NOT_SUPPORTED;
     }

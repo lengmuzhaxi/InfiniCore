@@ -6,8 +6,17 @@
 #ifdef ENABLE_CPU_API
 #include "cpu/smooth_l1_loss_cpu.h"
 #endif
-#ifdef ENABLE_NVIDIA_API
+#if defined(ENABLE_NVIDIA_API) || defined(ENABLE_ILUVATAR_API) || defined(ENABLE_QY_API)
 #include "nvidia/smooth_l1_loss_nvidia.cuh"
+#endif
+
+#ifdef ENABLE_METAX_API
+#include "metax/smooth_l1_loss_metax.h"
+#endif
+
+// 【新增】Moore 后端头文件
+#ifdef ENABLE_MOORE_API
+#include "moore/smooth_l1_loss_moore.h"
 #endif
 
 extern "C" {
@@ -24,17 +33,15 @@ __C infiniStatus_t infiniopCreateSmoothL1LossDescriptor(
     float beta,
     int reduction) {
 
-    // 【修正点】这里不再传递 {input, target} 列表，而是直接传递 input 和 target
-    // 必须与 smooth_l1_loss.h 中的 create 签名完全一致
-    #define CREATE(CASE, NAMESPACE)                                                         \
-        case CASE:                                                                          \
-            return op::smooth_l1_loss::NAMESPACE::Descriptor::create(                       \
-                handle,                                                                     \
-                reinterpret_cast<op::smooth_l1_loss::NAMESPACE::Descriptor **>(desc_ptr),   \
-                output,                                                                     \
-                input,   /* 直接传参，不要 {} */                                             \
-                target,  /* 直接传参 */                                                      \
-                beta,                                                                       \
+    #define CREATE(CASE, NAMESPACE)                                             \
+        case CASE:                                                              \
+            return op::smooth_l1_loss::NAMESPACE::Descriptor::create(           \
+                handle,                                                         \
+                reinterpret_cast<op::smooth_l1_loss::NAMESPACE::Descriptor **>(desc_ptr), \
+                output,                                                         \
+                input,                                                          \
+                target,                                                         \
+                beta,                                                           \
                 reduction)
 
     switch (handle->device) {
@@ -43,6 +50,19 @@ __C infiniStatus_t infiniopCreateSmoothL1LossDescriptor(
     #endif
     #ifdef ENABLE_NVIDIA_API
         CREATE(INFINI_DEVICE_NVIDIA, nvidia);
+    #endif
+    #ifdef ENABLE_ILUVATAR_API
+        CREATE(INFINI_DEVICE_ILUVATAR, nvidia);
+    #endif
+    #ifdef ENABLE_QY_API
+        CREATE(INFINI_DEVICE_QY, nvidia);
+    #endif
+    #ifdef ENABLE_METAX_API
+        CREATE(INFINI_DEVICE_METAX, metax);
+    #endif
+    // 【新增】Moore 分支
+    #ifdef ENABLE_MOORE_API
+        CREATE(INFINI_DEVICE_MOORE, moore);
     #endif
     default:
         return INFINI_STATUS_DEVICE_TYPE_NOT_SUPPORTED;
@@ -54,9 +74,10 @@ __C infiniStatus_t infiniopCreateSmoothL1LossDescriptor(
 // 2. 获取 Workspace 大小
 // =======================================================================
 __C infiniStatus_t infiniopGetSmoothL1LossWorkspaceSize(infiniopSmoothL1LossDescriptor_t desc, size_t *size) {
-    #define GET(CASE, NAMESPACE)                                                                    \
-        case CASE:                                                                                  \
-            *size = reinterpret_cast<const op::smooth_l1_loss::NAMESPACE::Descriptor *>(desc)->workspaceSize(); \
+
+    #define GET(CASE, NAMESPACE)                                                                            \
+        case CASE:                                                                                          \
+            *size = reinterpret_cast<op::smooth_l1_loss::NAMESPACE::Descriptor *>(desc)->workspaceSize();   \
             return INFINI_STATUS_SUCCESS
 
     switch (desc->device_type) {
@@ -65,6 +86,19 @@ __C infiniStatus_t infiniopGetSmoothL1LossWorkspaceSize(infiniopSmoothL1LossDesc
     #endif
     #ifdef ENABLE_NVIDIA_API
         GET(INFINI_DEVICE_NVIDIA, nvidia);
+    #endif
+    #ifdef ENABLE_ILUVATAR_API
+        GET(INFINI_DEVICE_ILUVATAR, nvidia);
+    #endif
+    #ifdef ENABLE_QY_API
+        GET(INFINI_DEVICE_QY, nvidia);
+    #endif
+    #ifdef ENABLE_METAX_API
+        GET(INFINI_DEVICE_METAX, metax);
+    #endif
+    // 【新增】Moore 分支
+    #ifdef ENABLE_MOORE_API
+        GET(INFINI_DEVICE_MOORE, moore);
     #endif
     default:
         return INFINI_STATUS_DEVICE_TYPE_NOT_SUPPORTED;
@@ -84,9 +118,8 @@ __C infiniStatus_t infiniopSmoothL1Loss(
     const void *target,
     void *stream) {
 
-    // calculate 签名通常也需要在 descriptor 中定义为接收两个指针
-    #define CALCULATE(CASE, NAMESPACE)                                                      \
-        case CASE:                                                                          \
+    #define CALCULATE(CASE, NAMESPACE)                                          \
+        case CASE:                                                              \
             return reinterpret_cast<const op::smooth_l1_loss::NAMESPACE::Descriptor *>(desc) \
                 ->calculate(workspace, workspace_size, output, input, target, stream)
 
@@ -96,6 +129,19 @@ __C infiniStatus_t infiniopSmoothL1Loss(
     #endif
     #ifdef ENABLE_NVIDIA_API
         CALCULATE(INFINI_DEVICE_NVIDIA, nvidia);
+    #endif
+    #ifdef ENABLE_ILUVATAR_API
+        CALCULATE(INFINI_DEVICE_ILUVATAR, nvidia);
+    #endif
+    #ifdef ENABLE_QY_API
+        CALCULATE(INFINI_DEVICE_QY, nvidia);
+    #endif
+    #ifdef ENABLE_METAX_API
+        CALCULATE(INFINI_DEVICE_METAX, metax);
+    #endif
+    // 【新增】Moore 分支
+    #ifdef ENABLE_MOORE_API
+        CALCULATE(INFINI_DEVICE_MOORE, moore);
     #endif
     default:
         return INFINI_STATUS_DEVICE_TYPE_NOT_SUPPORTED;
@@ -107,9 +153,10 @@ __C infiniStatus_t infiniopSmoothL1Loss(
 // 4. 销毁描述符
 // =======================================================================
 __C infiniStatus_t infiniopDestroySmoothL1LossDescriptor(infiniopSmoothL1LossDescriptor_t desc) {
-    #define DELETE(CASE, NAMESPACE)                                                         \
-        case CASE:                                                                          \
-            delete reinterpret_cast<const op::smooth_l1_loss::NAMESPACE::Descriptor *>(desc); \
+
+    #define DELETE(CASE, NAMESPACE)                                                              \
+        case CASE:                                                                               \
+            delete reinterpret_cast<const op::smooth_l1_loss::NAMESPACE::Descriptor *>(desc);    \
             return INFINI_STATUS_SUCCESS
 
     switch (desc->device_type) {
@@ -118,6 +165,19 @@ __C infiniStatus_t infiniopDestroySmoothL1LossDescriptor(infiniopSmoothL1LossDes
     #endif
     #ifdef ENABLE_NVIDIA_API
         DELETE(INFINI_DEVICE_NVIDIA, nvidia);
+    #endif
+    #ifdef ENABLE_ILUVATAR_API
+        DELETE(INFINI_DEVICE_ILUVATAR, nvidia);
+    #endif
+    #ifdef ENABLE_QY_API
+        DELETE(INFINI_DEVICE_QY, nvidia);
+    #endif
+    #ifdef ENABLE_METAX_API
+        DELETE(INFINI_DEVICE_METAX, metax);
+    #endif
+    // 【新增】Moore 分支
+    #ifdef ENABLE_MOORE_API
+        DELETE(INFINI_DEVICE_MOORE, moore);
     #endif
     default:
         return INFINI_STATUS_DEVICE_TYPE_NOT_SUPPORTED;

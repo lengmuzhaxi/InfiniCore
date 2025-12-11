@@ -103,8 +103,32 @@ class OpTest(BaseOperatorTest):
     def get_test_cases(self):
         return parse_test_cases()
 
+    # [FIXED] Torch operator wrapper for MUSA backend fallback
     def torch_operator(self, *args, **kwargs):
-        return torch.addbmm(*args, **kwargs)
+        # 1. 暂存原始的 GPU out tensor (如果是 inplace 模式)
+        original_out_tensor = kwargs.get("out")
+
+        # 2. 将所有 args 搬运到 CPU
+        cpu_args = [arg.cpu() if isinstance(arg, torch.Tensor) else arg for arg in args]
+        
+        # 3. 将所有 kwargs 搬运到 CPU
+        cpu_kwargs = {
+            k: v.cpu() if isinstance(v, torch.Tensor) else v 
+            for k, v in kwargs.items()
+        }
+        
+        # 4. 在 CPU 上计算
+        cpu_result = torch.addbmm(*cpu_args, **cpu_kwargs)
+        
+        # 5. [关键] 如果有 original_out_tensor，必须将 CPU 结果写回该 GPU Tensor
+        # 这样测试框架检查 kwargs['out'] 时才能看到变化
+        if original_out_tensor is not None and isinstance(original_out_tensor, torch.Tensor):
+            original_out_tensor.copy_(cpu_result)
+            return original_out_tensor
+        
+        # 6. 如果不是 inplace，将结果转回 GPU 返回
+        target_device = args[0].device if len(args) > 0 and isinstance(args[0], torch.Tensor) else "musa"
+        return cpu_result.to(target_device)
 
     def infinicore_operator(self, *args, **kwargs):
         return infinicore.addbmm(*args, **kwargs)

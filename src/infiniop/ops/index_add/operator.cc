@@ -14,6 +14,11 @@
 #include "metax/index_add_metax.h"
 #endif
 
+// 【新增】Moore 后端头文件
+#ifdef ENABLE_MOORE_API
+#include "moore/index_add_moore.h"
+#endif
+
 extern "C" {
 
 // =======================================================================
@@ -29,17 +34,16 @@ __C infiniStatus_t infiniopCreateIndexAddDescriptor(
     infiniopTensorDescriptor_t source,
     float alpha) {
 
-    // 【关键】将所有参数传递给后端 Descriptor::create
-    #define CREATE(CASE, NAMESPACE)                                                         \
-        case CASE:                                                                          \
-            return op::index_add::NAMESPACE::Descriptor::create(                            \
-                handle,                                                                     \
-                reinterpret_cast<op::index_add::NAMESPACE::Descriptor **>(desc_ptr),        \
-                output,                                                                     \
-                input,                                                                      \
-                dim,                                                                        \
-                index,                                                                      \
-                source,                                                                     \
+    #define CREATE(CASE, NAMESPACE)                                             \
+        case CASE:                                                              \
+            return op::index_add::NAMESPACE::Descriptor::create(                \
+                handle,                                                         \
+                reinterpret_cast<op::index_add::NAMESPACE::Descriptor **>(desc_ptr), \
+                output,                                                         \
+                input,                                                          \
+                dim,                                                            \
+                index,                                                          \
+                source,                                                         \
                 alpha)
 
     switch (handle->device) {
@@ -58,11 +62,11 @@ __C infiniStatus_t infiniopCreateIndexAddDescriptor(
     #ifdef ENABLE_METAX_API
         CREATE(INFINI_DEVICE_METAX, metax);
     #endif
-    /*
+    // 【关键修复】启用 Moore 分支
     #ifdef ENABLE_MOORE_API
         CREATE(INFINI_DEVICE_MOORE, moore);
     #endif
-    */
+    
     default:
         return INFINI_STATUS_DEVICE_TYPE_NOT_SUPPORTED;
     }
@@ -74,9 +78,9 @@ __C infiniStatus_t infiniopCreateIndexAddDescriptor(
 // =======================================================================
 __C infiniStatus_t infiniopGetIndexAddWorkspaceSize(infiniopIndexAddDescriptor_t desc, size_t *size) {
 
-    #define GET(CASE, NAMESPACE)                                                                     \
-        case CASE:                                                                                   \
-            *size = reinterpret_cast<op::index_add::NAMESPACE::Descriptor *>(desc)->workspaceSize(); \
+    #define GET(CASE, NAMESPACE)                                                                        \
+        case CASE:                                                                                      \
+            *size = reinterpret_cast<op::index_add::NAMESPACE::Descriptor *>(desc)->workspaceSize();    \
             return INFINI_STATUS_SUCCESS
 
     switch (desc->device_type) {
@@ -86,7 +90,6 @@ __C infiniStatus_t infiniopGetIndexAddWorkspaceSize(infiniopIndexAddDescriptor_t
     #ifdef ENABLE_NVIDIA_API
         GET(INFINI_DEVICE_NVIDIA, nvidia);
     #endif
-    /*
     #ifdef ENABLE_ILUVATAR_API
         GET(INFINI_DEVICE_ILUVATAR, nvidia);
     #endif
@@ -96,16 +99,15 @@ __C infiniStatus_t infiniopGetIndexAddWorkspaceSize(infiniopIndexAddDescriptor_t
     #ifdef ENABLE_METAX_API
         GET(INFINI_DEVICE_METAX, metax);
     #endif
+    // 【关键修复】启用 Moore 分支
     #ifdef ENABLE_MOORE_API
-        CREATE(INFINI_DEVICE_MOORE, moore);
+        GET(INFINI_DEVICE_MOORE, moore);
     #endif
-    */
+    
     default:
         return INFINI_STATUS_DEVICE_TYPE_NOT_SUPPORTED;
     }
     #undef GET
-
-    return INFINI_STATUS_DEVICE_TYPE_NOT_SUPPORTED;
 }
 
 // =======================================================================
@@ -121,10 +123,9 @@ __C infiniStatus_t infiniopIndexAdd(
     const void *source,
     void *stream) {
 
-    // 【关键】传递四个 Tensor 数据指针 (output, input, index, source)
-    #define CALCULATE(CASE, NAMESPACE)                                                      \
-        case CASE:                                                                          \
-            return reinterpret_cast<const op::index_add::NAMESPACE::Descriptor *>(desc)     \
+    #define CALCULATE(CASE, NAMESPACE)                                          \
+        case CASE:                                                              \
+            return reinterpret_cast<const op::index_add::NAMESPACE::Descriptor *>(desc) \
                 ->calculate(workspace, workspace_size, output, input, index, source, stream)
 
     switch (desc->device_type) {
@@ -134,7 +135,6 @@ __C infiniStatus_t infiniopIndexAdd(
     #ifdef ENABLE_NVIDIA_API
         CALCULATE(INFINI_DEVICE_NVIDIA, nvidia);
     #endif
-    /*
     #ifdef ENABLE_ILUVATAR_API
         CALCULATE(INFINI_DEVICE_ILUVATAR, nvidia);
     #endif
@@ -144,10 +144,11 @@ __C infiniStatus_t infiniopIndexAdd(
     #ifdef ENABLE_METAX_API
         CALCULATE(INFINI_DEVICE_METAX, metax);
     #endif
+    // 【关键修复】启用 Moore 分支
     #ifdef ENABLE_MOORE_API
-        CREATE(INFINI_DEVICE_MOORE, moore);
+        CALCULATE(INFINI_DEVICE_MOORE, moore);
     #endif
-    */
+    
     default:
         return INFINI_STATUS_DEVICE_TYPE_NOT_SUPPORTED;
     }
@@ -159,9 +160,9 @@ __C infiniStatus_t infiniopIndexAdd(
 // =======================================================================
 __C infiniStatus_t infiniopDestroyIndexAddDescriptor(infiniopIndexAddDescriptor_t desc) {
 
-    #define DELETE(CASE, NAMESPACE)                                                         \
-        case CASE:                                                                          \
-            delete reinterpret_cast<const op::index_add::NAMESPACE::Descriptor *>(desc);    \
+    #define DELETE(CASE, NAMESPACE)                                                          \
+        case CASE:                                                                           \
+            delete reinterpret_cast<const op::index_add::NAMESPACE::Descriptor *>(desc);     \
             return INFINI_STATUS_SUCCESS
 
     switch (desc->device_type) {
@@ -171,7 +172,6 @@ __C infiniStatus_t infiniopDestroyIndexAddDescriptor(infiniopIndexAddDescriptor_
     #ifdef ENABLE_NVIDIA_API
         DELETE(INFINI_DEVICE_NVIDIA, nvidia);
     #endif
-    /*
     #ifdef ENABLE_ILUVATAR_API
         DELETE(INFINI_DEVICE_ILUVATAR, nvidia);
     #endif
@@ -181,7 +181,11 @@ __C infiniStatus_t infiniopDestroyIndexAddDescriptor(infiniopIndexAddDescriptor_
     #ifdef ENABLE_METAX_API
         DELETE(INFINI_DEVICE_METAX, metax);
     #endif
-    */
+    // 【关键修复】启用 Moore 分支
+    #ifdef ENABLE_MOORE_API
+        DELETE(INFINI_DEVICE_MOORE, moore);
+    #endif
+    
     default:
         return INFINI_STATUS_DEVICE_TYPE_NOT_SUPPORTED;
     }

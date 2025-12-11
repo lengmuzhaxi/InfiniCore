@@ -6,6 +6,7 @@
 #ifdef ENABLE_CPU_API
 #include "cpu/floor_cpu.h"
 #endif
+
 #if defined(ENABLE_NVIDIA_API) || defined(ENABLE_ILUVATAR_API) || defined(ENABLE_QY_API)
 #include "nvidia/floor_nvidia.cuh"
 #endif
@@ -13,6 +14,14 @@
 #ifdef ENABLE_METAX_API
 #include "metax/floor_metax.h"
 #endif
+
+// ==========================================
+// 1. 添加 MOORE 头文件引用
+// ==========================================
+#ifdef ENABLE_MOORE_API
+#include "moore/floor_moore.h"
+#endif
+// ==========================================
 
 extern "C" {
 
@@ -49,6 +58,12 @@ __C infiniStatus_t infiniopCreateFloorDescriptor(
     #ifdef ENABLE_METAX_API
         CREATE(INFINI_DEVICE_METAX, metax);
     #endif
+    // ==========================================
+    // 添加 MOORE 分支
+    // ==========================================
+    #ifdef ENABLE_MOORE_API
+        CREATE(INFINI_DEVICE_MOORE, moore);
+    #endif
     default:
         return INFINI_STATUS_DEVICE_TYPE_NOT_SUPPORTED;
     }
@@ -71,6 +86,12 @@ __C infiniStatus_t infiniopGetFloorWorkspaceSize(infiniopFloorDescriptor_t desc,
     #endif
     #ifdef ENABLE_NVIDIA_API
         GET(INFINI_DEVICE_NVIDIA, nvidia);
+    #endif
+    // ==========================================
+    // 添加 MOORE 分支
+    // ==========================================
+    #ifdef ENABLE_MOORE_API
+        GET(INFINI_DEVICE_MOORE, moore);
     #endif
     /*#ifdef ENABLE_ILUVATAR_API
         GET(INFINI_DEVICE_ILUVATAR, nvidia);
@@ -100,18 +121,23 @@ __C infiniStatus_t infiniopFloor(
     const void *input,
     void *stream) {
 
-    #define CALCULATE(CASE, NAMESPACE)                                            \
-        case CASE:                                                                \
+    #define CALCULATE(CASE, NAMESPACE)                                          \
+        case CASE:                                                              \
             return reinterpret_cast<const op::floor::NAMESPACE::Descriptor *>(desc) \
                 ->calculate(workspace, workspace_size, output, {input}, stream)
 
-    // 【修改点】同上，直接访问 device_type
     switch (desc->device_type) {
     #ifdef ENABLE_CPU_API
         CALCULATE(INFINI_DEVICE_CPU, cpu);
     #endif
     #ifdef ENABLE_NVIDIA_API
         CALCULATE(INFINI_DEVICE_NVIDIA, nvidia);
+    #endif
+    // ==========================================
+    // 添加 MOORE 分支
+    // ==========================================
+    #ifdef ENABLE_MOORE_API
+        CALCULATE(INFINI_DEVICE_MOORE, moore);
     #endif
     /*#ifdef ENABLE_ILUVATAR_API
         CALCULATE(INFINI_DEVICE_ILUVATAR, nvidia);
@@ -144,6 +170,12 @@ __C infiniStatus_t infiniopDestroyFloorDescriptor(infiniopFloorDescriptor_t desc
     #endif
     #ifdef ENABLE_NVIDIA_API
         DELETE(INFINI_DEVICE_NVIDIA, nvidia);
+    #endif
+    // ==========================================
+    // 添加 MOORE 分支
+    // ==========================================
+    #ifdef ENABLE_MOORE_API
+        DELETE(INFINI_DEVICE_MOORE, moore);
     #endif
     /*#ifdef ENABLE_ILUVATAR_API
         DELETE(INFINI_DEVICE_ILUVATAR, nvidia);

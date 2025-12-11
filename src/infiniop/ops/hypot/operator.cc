@@ -13,6 +13,9 @@
 #ifdef ENABLE_METAX_API
 #include "metax/hypot_metax.h"
 #endif
+#ifdef ENABLE_MOORE_API
+#include "moore/hypot_moore.h"
+#endif
 
 extern "C" {
 
@@ -23,17 +26,17 @@ __C infiniStatus_t infiniopCreateHypotDescriptor(
     infiniopHandle_t handle,
     infiniopHypotDescriptor_t *desc_ptr,
     infiniopTensorDescriptor_t output,
-    infiniopTensorDescriptor_t input_a,
-    infiniopTensorDescriptor_t input_b) {
+    infiniopTensorDescriptor_t input_x,
+    infiniopTensorDescriptor_t input_y) {
 
-    // 【修改点】Create 接收 input_a 和 input_b，并以列表形式 {input_a, input_b} 传递给后端
-    #define CREATE(CASE, NAMESPACE)                                                 \
-        case CASE:                                                                  \
-            return op::hypot::NAMESPACE::Descriptor::create(                        \
-                handle,                                                             \
-                reinterpret_cast<op::hypot::NAMESPACE::Descriptor **>(desc_ptr),    \
-                output,                                                             \
-                {input_a, input_b})
+    // 注意：Hypot 是二元算子，这里传递 {input_x, input_y}
+    #define CREATE(CASE, NAMESPACE)                                             \
+        case CASE:                                                              \
+            return op::hypot::NAMESPACE::Descriptor::create(                    \
+                handle,                                                         \
+                reinterpret_cast<op::hypot::NAMESPACE::Descriptor **>(desc_ptr),\
+                output,                                                         \
+                {input_x, input_y})
 
     switch (handle->device) {
     #ifdef ENABLE_CPU_API
@@ -51,6 +54,9 @@ __C infiniStatus_t infiniopCreateHypotDescriptor(
     #ifdef ENABLE_METAX_API
         CREATE(INFINI_DEVICE_METAX, metax);
     #endif
+    #ifdef ENABLE_MOORE_API
+        CREATE(INFINI_DEVICE_MOORE, moore);
+    #endif
     default:
         return INFINI_STATUS_DEVICE_TYPE_NOT_SUPPORTED;
     }
@@ -62,9 +68,9 @@ __C infiniStatus_t infiniopCreateHypotDescriptor(
 // =======================================================================
 __C infiniStatus_t infiniopGetHypotWorkspaceSize(infiniopHypotDescriptor_t desc, size_t *size) {
 
-    #define GET(CASE, NAMESPACE)                                                             \
-        case CASE:                                                                           \
-            *size = reinterpret_cast<op::hypot::NAMESPACE::Descriptor *>(desc)->workspaceSize(); \
+    #define GET(CASE, NAMESPACE)                                                                   \
+        case CASE:                                                                                 \
+            *size = reinterpret_cast<op::hypot::NAMESPACE::Descriptor *>(desc)->workspaceSize();   \
             return INFINI_STATUS_SUCCESS
 
     switch (desc->device_type) {
@@ -74,7 +80,9 @@ __C infiniStatus_t infiniopGetHypotWorkspaceSize(infiniopHypotDescriptor_t desc,
     #ifdef ENABLE_NVIDIA_API
         GET(INFINI_DEVICE_NVIDIA, nvidia);
     #endif
-    /* 保持与参考代码一致的注释状态，如有需要请取消注释
+    #ifdef ENABLE_MOORE_API
+        GET(INFINI_DEVICE_MOORE, moore);
+    #endif
     #ifdef ENABLE_ILUVATAR_API
         GET(INFINI_DEVICE_ILUVATAR, nvidia);
     #endif
@@ -84,15 +92,10 @@ __C infiniStatus_t infiniopGetHypotWorkspaceSize(infiniopHypotDescriptor_t desc,
     #ifdef ENABLE_METAX_API
         GET(INFINI_DEVICE_METAX, metax);
     #endif 
-    #ifdef ENABLE_MOORE_API
-        CREATE(INFINI_DEVICE_MOORE, moore);
-    #endif*/
     default:
         return INFINI_STATUS_DEVICE_TYPE_NOT_SUPPORTED;
     }
     #undef GET
-
-    return INFINI_STATUS_DEVICE_TYPE_NOT_SUPPORTED;
 }
 
 // =======================================================================
@@ -103,15 +106,15 @@ __C infiniStatus_t infiniopHypot(
     void *workspace,
     size_t workspace_size,
     void *output,
-    const void *input_a,
-    const void *input_b,
+    const void *input_x,
+    const void *input_y,
     void *stream) {
 
-    // 【修改点】calculate 接收 input_a 和 input_b，并以列表形式 {input_a, input_b} 传递
+    // 注意：Calculate 时同样传递两个输入指针 {input_x, input_y}
     #define CALCULATE(CASE, NAMESPACE)                                          \
         case CASE:                                                              \
             return reinterpret_cast<const op::hypot::NAMESPACE::Descriptor *>(desc) \
-                ->calculate(workspace, workspace_size, output, {input_a, input_b}, stream)
+                ->calculate(workspace, workspace_size, output, {input_x, input_y}, stream)
 
     switch (desc->device_type) {
     #ifdef ENABLE_CPU_API
@@ -120,7 +123,9 @@ __C infiniStatus_t infiniopHypot(
     #ifdef ENABLE_NVIDIA_API
         CALCULATE(INFINI_DEVICE_NVIDIA, nvidia);
     #endif
-    /* 保持与参考代码一致的注释状态，如有需要请取消注释
+    #ifdef ENABLE_MOORE_API
+        CALCULATE(INFINI_DEVICE_MOORE, moore);
+    #endif
     #ifdef ENABLE_ILUVATAR_API
         CALCULATE(INFINI_DEVICE_ILUVATAR, nvidia);
     #endif
@@ -130,9 +135,6 @@ __C infiniStatus_t infiniopHypot(
     #ifdef ENABLE_METAX_API
         CALCULATE(INFINI_DEVICE_METAX, metax);
     #endif 
-    #ifdef ENABLE_MOORE_API
-        CREATE(INFINI_DEVICE_MOORE, moore);
-    #endif*/
     default:
         return INFINI_STATUS_DEVICE_TYPE_NOT_SUPPORTED;
     }
@@ -144,9 +146,9 @@ __C infiniStatus_t infiniopHypot(
 // =======================================================================
 __C infiniStatus_t infiniopDestroyHypotDescriptor(infiniopHypotDescriptor_t desc) {
 
-    #define DELETE(CASE, NAMESPACE)                                            \
-        case CASE:                                                             \
-            delete reinterpret_cast<const op::hypot::NAMESPACE::Descriptor *>(desc); \
+    #define DELETE(CASE, NAMESPACE)                                                          \
+        case CASE:                                                                           \
+            delete reinterpret_cast<const op::hypot::NAMESPACE::Descriptor *>(desc);         \
             return INFINI_STATUS_SUCCESS
 
     switch (desc->device_type) {
@@ -156,7 +158,9 @@ __C infiniStatus_t infiniopDestroyHypotDescriptor(infiniopHypotDescriptor_t desc
     #ifdef ENABLE_NVIDIA_API
         DELETE(INFINI_DEVICE_NVIDIA, nvidia);
     #endif
-    /* 保持与参考代码一致的注释状态，如有需要请取消注释
+    #ifdef ENABLE_MOORE_API
+        DELETE(INFINI_DEVICE_MOORE, moore);
+    #endif
     #ifdef ENABLE_ILUVATAR_API
         DELETE(INFINI_DEVICE_ILUVATAR, nvidia);
     #endif
@@ -166,9 +170,6 @@ __C infiniStatus_t infiniopDestroyHypotDescriptor(infiniopHypotDescriptor_t desc
     #ifdef ENABLE_METAX_API
         DELETE(INFINI_DEVICE_METAX, metax);
     #endif 
-    #ifdef ENABLE_MOORE_API
-        CREATE(INFINI_DEVICE_MOORE, moore);
-    #endif*/
     default:
         return INFINI_STATUS_DEVICE_TYPE_NOT_SUPPORTED;
     }

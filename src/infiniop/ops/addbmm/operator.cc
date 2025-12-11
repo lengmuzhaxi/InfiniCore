@@ -16,11 +16,14 @@
 #include "metax/addbmm_metax.h"
 #endif
 
+// [Moore Threads Support]
+// 添加摩尔线程头文件
+#ifdef ENABLE_MOORE_API
+#include "moore/addbmm_moore.h"
+#endif
+
 // =======================================================================
 // [修复] 定义结构体
-// 必须在此处定义该结构体，以便编译器能访问 desc->device_type。
-// 假设后端实现的 Descriptor 类首个成员是 device_type，这是一种通用的
-// C-API 模拟多态的内存布局技巧。
 // =======================================================================
 struct infiniopAddbmmDescriptor {
     int device_type;
@@ -42,17 +45,14 @@ __C infiniStatus_t infiniopCreateAddbmmDescriptor(
     float beta) {
 
     // 宏：根据不同后端调用对应的 C++ create 方法
-    // 注意：这里会将 void** 强转传递给后端，后端分配内存后，
-    // *desc_ptr 实际上指向的是后端 C++ 对象（如 op::addbmm::cpu::Descriptor*）。
-    // 只要该对象内存布局的第一个成员是 device_type，后续的强制转换和访问就是安全的。
-    #define CREATE(CASE, NAMESPACE)                                             \
-        case CASE:                                                              \
-            return op::addbmm::NAMESPACE::Descriptor::create(                   \
-                handle,                                                         \
-                reinterpret_cast<op::addbmm::NAMESPACE::Descriptor **>(desc_ptr),\
-                output,                                                         \
-                {input, batch1, batch2},                                        \
-                alpha,                                                          \
+    #define CREATE(CASE, NAMESPACE)                                                 \
+        case CASE:                                                                  \
+            return op::addbmm::NAMESPACE::Descriptor::create(                       \
+                handle,                                                             \
+                reinterpret_cast<op::addbmm::NAMESPACE::Descriptor **>(desc_ptr),   \
+                output,                                                             \
+                {input, batch1, batch2},                                            \
+                alpha,                                                              \
                 beta)
 
     switch (handle->device) {
@@ -71,6 +71,12 @@ __C infiniStatus_t infiniopCreateAddbmmDescriptor(
     #ifdef ENABLE_METAX_API
         CREATE(INFINI_DEVICE_METAX, metax);
     #endif
+
+    // [Moore Threads Support]
+    #ifdef ENABLE_MOORE_API
+        CREATE(INFINI_DEVICE_MOORE, moore);
+    #endif
+
     default:
         return INFINI_STATUS_DEVICE_TYPE_NOT_SUPPORTED;
     }
@@ -87,7 +93,6 @@ __C infiniStatus_t infiniopGetAddbmmWorkspaceSize(infiniopAddbmmDescriptor_t des
             *size = reinterpret_cast<op::addbmm::NAMESPACE::Descriptor *>(desc)->workspaceSize();  \
             return INFINI_STATUS_SUCCESS
 
-    // [修复] 现在结构体已定义，desc->device_type 可以被正确访问
     switch (desc->device_type) {
     #ifdef ENABLE_CPU_API
         GET(INFINI_DEVICE_CPU, cpu);
@@ -104,6 +109,12 @@ __C infiniStatus_t infiniopGetAddbmmWorkspaceSize(infiniopAddbmmDescriptor_t des
     #ifdef ENABLE_METAX_API
         GET(INFINI_DEVICE_METAX, metax);
     #endif
+
+    // [Moore Threads Support]
+    #ifdef ENABLE_MOORE_API
+        GET(INFINI_DEVICE_MOORE, moore);
+    #endif
+
     default:
         return INFINI_STATUS_DEVICE_TYPE_NOT_SUPPORTED;
     }
@@ -144,6 +155,12 @@ __C infiniStatus_t infiniopAddbmm(
     #ifdef ENABLE_METAX_API
         CALCULATE(INFINI_DEVICE_METAX, metax);
     #endif
+
+    // [Moore Threads Support]
+    #ifdef ENABLE_MOORE_API
+        CALCULATE(INFINI_DEVICE_MOORE, moore);
+    #endif
+
     default:
         return INFINI_STATUS_DEVICE_TYPE_NOT_SUPPORTED;
     }
@@ -155,9 +172,9 @@ __C infiniStatus_t infiniopAddbmm(
 // =======================================================================
 __C infiniStatus_t infiniopDestroyAddbmmDescriptor(infiniopAddbmmDescriptor_t desc) {
 
-    #define DELETE(CASE, NAMESPACE)                                                     \
-        case CASE:                                                                      \
-            delete reinterpret_cast<const op::addbmm::NAMESPACE::Descriptor *>(desc);   \
+    #define DELETE(CASE, NAMESPACE)                                                         \
+        case CASE:                                                                          \
+            delete reinterpret_cast<const op::addbmm::NAMESPACE::Descriptor *>(desc);       \
             return INFINI_STATUS_SUCCESS
 
     switch (desc->device_type) {
@@ -176,6 +193,12 @@ __C infiniStatus_t infiniopDestroyAddbmmDescriptor(infiniopAddbmmDescriptor_t de
     #ifdef ENABLE_METAX_API
         DELETE(INFINI_DEVICE_METAX, metax);
     #endif
+
+    // [Moore Threads Support]
+    #ifdef ENABLE_MOORE_API
+        DELETE(INFINI_DEVICE_MOORE,moore);
+    #endif
+
     default:
         return INFINI_STATUS_DEVICE_TYPE_NOT_SUPPORTED;
     }
