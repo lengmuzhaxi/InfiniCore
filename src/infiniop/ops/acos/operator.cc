@@ -52,7 +52,6 @@ __C infiniStatus_t infiniopCreateAcosDescriptor(
     #ifdef ENABLE_METAX_API
         CREATE(INFINI_DEVICE_METAX, metax);
     #endif
-    // ✅ 正确：使用 CREATE 宏
     #ifdef ENABLE_MOORE_API
         CREATE(INFINI_DEVICE_MOORE, moore);
     #endif

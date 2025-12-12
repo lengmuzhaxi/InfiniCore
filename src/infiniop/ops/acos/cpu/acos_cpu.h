@@ -3,7 +3,6 @@
 
 #include "../../../elementwise/cpu/elementwise_cpu.h"
 
-// 使用宏声明 Descriptor 类
 ELEMENTWISE_DESCRIPTOR(acos, cpu)
 
 #include <cmath>
@@ -17,8 +16,6 @@ public:
 
     template <typename T>
     T operator()(const T &x) const {
-        // 1. 整数类型：必须先转为浮点计算，再转回整数
-        // 注意：这会导致结果截断 (例如 acos(0) = 1.57 -> 1)
         if constexpr (std::is_integral_v<T>) {
             return static_cast<T>(std::acos(static_cast<double>(x)));
         } 

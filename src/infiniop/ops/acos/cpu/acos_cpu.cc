@@ -17,8 +17,6 @@ infiniStatus_t Descriptor::create(
     const auto &output_shape = out_desc->shape();
     const auto &input_shape = input_desc->shape();
 
-    // 【修改点 1】仅检查浮点类型
-    // 移除了所有 INT/UINT 类型，如果传入整数将返回错误
     CHECK_DTYPE(dtype, 
         INFINI_DTYPE_BF16, 
         INFINI_DTYPE_F16, 
@@ -40,10 +38,7 @@ infiniStatus_t Descriptor::calculate(
     void *output,
     std::vector<const void *> inputs,
     void *stream) const {
-
-    // 【修改点 2】仅分发浮点类型
     switch (_dtype) {
-    // === 浮点类型 ===
     case INFINI_DTYPE_BF16:
         return _device_info->calculate<AcosOp, bf16_t>(_info, output, inputs, stream);
     case INFINI_DTYPE_F16:
@@ -52,8 +47,6 @@ infiniStatus_t Descriptor::calculate(
         return _device_info->calculate<AcosOp, float>(_info, output, inputs, stream);
     case INFINI_DTYPE_F64:
         return _device_info->calculate<AcosOp, double>(_info, output, inputs, stream);
-
-    // 移除了所有整数 Case
     default:
         return INFINI_STATUS_BAD_TENSOR_DTYPE;
     }

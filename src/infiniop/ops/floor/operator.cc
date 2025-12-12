@@ -58,9 +58,6 @@ __C infiniStatus_t infiniopCreateFloorDescriptor(
     #ifdef ENABLE_METAX_API
         CREATE(INFINI_DEVICE_METAX, metax);
     #endif
-    // ==========================================
-    // 添加 MOORE 分支
-    // ==========================================
     #ifdef ENABLE_MOORE_API
         CREATE(INFINI_DEVICE_MOORE, moore);
     #endif

@@ -42,6 +42,9 @@ from infinicore.dtype import (
 from infinicore.ops.add import add
 from infinicore.ops.addbmm import addbmm
 from infinicore.ops.attention import attention
+from infinicore.ops.erf import erf
+from infinicore.ops.erfc import erfc
+from infinicore.ops.erfinv import erfinv
 from infinicore.ops.floor import floor
 from infinicore.ops.hypot import hypot
 from infinicore.ops.index_add import index_add
@@ -118,6 +121,9 @@ __all__ = [
     "rearrange",
     "empty",
     "empty_like",
+    "erf",
+    "erfc",
+    "erfinv",
     "floor",
     "from_blob",
     "from_list",

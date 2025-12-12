@@ -48,7 +48,9 @@ __C infiniStatus_t infiniopCreateAdaptiveAvgPool1dDescriptor(
     #ifdef ENABLE_NVIDIA_API
         CREATE(INFINI_DEVICE_NVIDIA, nvidia);
     #endif
-    
+    #ifdef ENABLE_ILUVATAR_API
+        CREATE(INFINI_DEVICE_ILUVATAR,nvidia);
+    #endif
     // [Moore Threads Support]
     #ifdef ENABLE_MOORE_API
         CREATE(INFINI_DEVICE_MOORE, moore);
@@ -77,7 +79,9 @@ __C infiniStatus_t infiniopGetAdaptiveAvgPool1dWorkspaceSize(infiniopAdaptiveAvg
     #ifdef ENABLE_NVIDIA_API
         GET(INFINI_DEVICE_NVIDIA, nvidia);
     #endif
-    
+    #ifdef ENABLE_ILUVATAR_API
+        GET(INFINI_DEVICE_ILUVATAR,nvidia);
+    #endif
     // [Moore Threads Support]
     #ifdef ENABLE_MOORE_API
         GET(INFINI_DEVICE_MOORE, moore);
@@ -112,7 +116,9 @@ __C infiniStatus_t infiniopAdaptiveAvgPool1d(
     #ifdef ENABLE_NVIDIA_API
         CALCULATE(INFINI_DEVICE_NVIDIA, nvidia);
     #endif
-
+    #ifdef ENABLE_ILUVATAR_API
+        CALCULATE(INFINI_DEVICE_ILUVATAR,nvidia);
+    #endif
     // [Moore Threads Support]
     #ifdef ENABLE_MOORE_API
         CALCULATE(INFINI_DEVICE_MOORE, moore);
@@ -141,7 +147,9 @@ __C infiniStatus_t infiniopDestroyAdaptiveAvgPool1dDescriptor(infiniopAdaptiveAv
     #ifdef ENABLE_NVIDIA_API
         DELETE(INFINI_DEVICE_NVIDIA, nvidia);
     #endif
-
+    #ifdef ENABLE_ILUVATAR_API
+        DELETE(INFINI_DEVICE_ILUVATAR,nvidia);
+    #endif
     // [Moore Threads Support]
     #ifdef ENABLE_MOORE_API
         DELETE(INFINI_DEVICE_MOORE, moore);

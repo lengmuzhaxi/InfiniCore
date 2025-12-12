@@ -9,6 +9,9 @@
 #include "ops/attention.hpp"
 #include "ops/causal_softmax.hpp"
 #include "ops/embedding.hpp"
+#include "ops/erf.hpp"
+#include "ops/erfc.hpp"
+#include "ops/erfinv.hpp"
 #include "ops/floor.hpp"
 #include "ops/hypot.hpp"
 #include "ops/index_add.hpp"
@@ -38,6 +41,9 @@ inline void bind(py::module &m) {
     bind_attention(m);
     bind_causal_softmax(m);
     bind_random_sample(m);
+    bind_erf(m);
+    bind_erfc(m);
+    bind_erfinv(m);
     bind_floor(m);
     bind_hypot(m);
     bind_index_add(m);

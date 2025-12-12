@@ -3,7 +3,7 @@
 
 #include <cuda_fp16.h>
 #include <cuda_bf16.h>
-#include <cuda/std/cmath>
+#include <cmath>
 #include <math.h>
 #include <type_traits>
 

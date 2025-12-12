@@ -1,9 +1,5 @@
 #include "acos_moore.h"
-
-// 引入 Moore 平台的通用 Elementwise 描述符宏
 #include "../../../elementwise/moore/elementwise_moore.h"
-
-// 引入 Acos 的具体 Kernel 实现
 #include "acos_moore_kernel.h"
 
 namespace op::acos::moore {
@@ -59,10 +55,6 @@ infiniStatus_t Descriptor::calculate(
         return _device_info->calculate<256, moore::AcosOp, float>(_info, workspace, output, inputs, stream);
     case INFINI_DTYPE_F64:
         return _device_info->calculate<256, moore::AcosOp, double>(_info, workspace, output, inputs, stream);
-    
-    // 如果业务确实需要支持 INT 输入并强转为 Float 输出，逻辑会非常不同，通常这里只处理 Output Dtype 
-    // 所以移除了 I32/I64 的 case，因为 calculate 是根据 Output Dtype 分发的。
-    
     default:
         return INFINI_STATUS_BAD_TENSOR_DTYPE;
     }

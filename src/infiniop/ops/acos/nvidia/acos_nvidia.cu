@@ -1,6 +1,5 @@
 #include "../../../elementwise/nvidia/elementwise_nvidia.cuh"
 
-// 引入 Acos 的核心计算 Functor (对应上一轮提供的 acos_cuda.h)
 #include "../cuda/kernel.cuh"
 #include "acos_nvidia.cuh"
 
@@ -20,9 +19,6 @@ infiniStatus_t Descriptor::create(
     const auto &input_desc = input_desc_vec.at(0);
     const auto &output_shape = out_desc->shape();
     const auto &input_shape = input_desc->shape();
-
-    // Acos 仅支持浮点类型
-    // 如果上层 Wrapper 做了 Int->Float 的提升，传到这里的 dtype 已经是 Float 了
     CHECK_DTYPE(dtype, 
         INFINI_DTYPE_BF16, 
         INFINI_DTYPE_F16, 
@@ -32,7 +28,6 @@ infiniStatus_t Descriptor::create(
 
     CHECK_SAME_SHAPE(output_shape, input_shape);
 
-    // 使用通用的 Elementwise 描述符创建宏
     CREATE_ELEMENTWISE_CUDA_DESCRIPTOR(handle, dtype, out_desc, input_desc_vec)
 
     return INFINI_STATUS_SUCCESS;
