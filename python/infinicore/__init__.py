@@ -52,6 +52,7 @@ from infinicore.ops.index_copy import index_copy
 from infinicore.ops.acos import acos
 from infinicore.ops.matmul import matmul
 from infinicore.ops.mul import mul
+from infinicore.ops.matrix_power import matrix_power
 from infinicore.ops.narrow import narrow
 from infinicore.ops.rearrange import rearrange
 from infinicore.ops.take import take
@@ -129,6 +130,7 @@ __all__ = [
     "from_list",
     "from_numpy",
     "from_torch",
+    "matrix_power",
     "hypot",
     "ones",
     "strided_empty",

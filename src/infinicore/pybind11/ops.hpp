@@ -17,8 +17,10 @@
 #include "ops/index_add.hpp"
 #include "ops/index_copy.hpp"
 #include "ops/linear.hpp"
+#include "ops/matrix_power.hpp" // 新增头文件
 #include "ops/matmul.hpp"
 #include "ops/mul.hpp"
+#include "ops/pixel_shuffle.hpp" // 新增头文件
 #include "ops/random_sample.hpp"
 #include "ops/rearrange.hpp"
 #include "ops/rms_norm.hpp"
@@ -49,8 +51,10 @@ inline void bind(py::module &m) {
     bind_index_add(m);
     bind_index_copy(m);
     bind_linear(m);
+    bind_matrix_power(m); // 新增绑定调用
     bind_matmul(m);
     bind_mul(m);
+    bind_pixel_shuffle(m); // 新增绑定调用
     bind_rearrange(m);
     bind_rms_norm(m);
     bind_silu(m);

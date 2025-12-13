@@ -24,8 +24,10 @@
 #include "infiniop/ops/layer_norm.h"
 #include "infiniop/ops/logsoftmax.h"
 #include "infiniop/ops/lp_norm.h"
+#include "infiniop/ops/matrix_power.h" // 新增
 #include "infiniop/ops/mul.h"
 #include "infiniop/ops/ones.h"
+#include "infiniop/ops/pixel_shuffle.h" // 新增
 #include "infiniop/ops/random_sample.h"
 #include "infiniop/ops/rearrange.h"
 #include "infiniop/ops/relu.h"

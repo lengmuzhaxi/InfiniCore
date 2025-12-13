@@ -9,6 +9,7 @@ from .swiglu import swiglu
 from infinicore.ops.adaptive_avg_pool1d import adaptive_avg_pool1d
 from infinicore.ops.affine_grid import affine_grid  
 from infinicore.ops.smooth_l1_loss import smooth_l1_loss
+from infinicore.ops.pixel_shuffle import pixel_shuffle
 
 __all__ = [
     "adaptive_avg_pool1d",
@@ -21,6 +22,7 @@ __all__ = [
     "swiglu",
     "linear",
     "embedding",
+    "pixel_shuffle",
     "rope",
     "RopeAlgo",
 ]

@@ -5,4 +5,4 @@
 
 DESCRIPTOR(nvidia)
 
-#endif // __GEMM_CUDA_CUH__
+#endif // __ADDBMM_CUDA_CUH__
