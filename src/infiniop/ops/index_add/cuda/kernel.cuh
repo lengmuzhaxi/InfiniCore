@@ -1,9 +1,19 @@
 #ifndef __INDEX_ADD_CUDA_H__
 #define __INDEX_ADD_CUDA_H__
 
-#include <cuda_runtime.h>
-#include <cuda_fp16.h>
-#include <cuda_bf16.h>
+//#include <cuda_runtime.h>
+#if defined(__MACA__) || defined(__MACACC__)
+    #include <maca_fp16.h>
+    #include <maca_bfloat16.h>
+    using nv_bfloat162 = __maca_bfloat162;
+#else
+    #include <cuda_fp16.h>
+    #include <cuda_bf16.h>
+#endif
+#if defined(__MACA__) || defined(__MACACC__)
+#define __nv_bfloat16 __maca_bfloat16
+#define __nv_bfloat162 __maca_bfloat162
+#endif
 #include <cstdint>
 
 namespace op::index_add::cuda {

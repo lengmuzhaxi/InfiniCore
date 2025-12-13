@@ -1,9 +1,15 @@
 #ifndef __ACOS_CUDA_H__
 #define __ACOS_CUDA_H__
+#if defined(__MACA__) || defined(__MACACC__)
+    #include <maca_fp16.h>
+    #include <maca_bfloat16.h>
+    using nv_bfloat162 = __maca_bfloat162;
+#else
+    #include <cuda_fp16.h>
+    #include <cuda_bf16.h>
+#endif
 
-#include <cuda_fp16.h>
-#include <cuda_bf16.h>
-#include <cuda/std/cmath>
+#include <cmath>
 #include <math.h>
 #include <type_traits>
 

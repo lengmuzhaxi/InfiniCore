@@ -83,7 +83,6 @@ __C infiniStatus_t infiniopGetAcosWorkspaceSize(infiniopAcosDescriptor_t desc, s
     #ifdef ENABLE_MOORE_API
         GET(INFINI_DEVICE_MOORE, moore);
     #endif
-    /* 其他后端按需开启
     #ifdef ENABLE_ILUVATAR_API
         GET(INFINI_DEVICE_ILUVATAR, nvidia);
     #endif
@@ -92,7 +91,7 @@ __C infiniStatus_t infiniopGetAcosWorkspaceSize(infiniopAcosDescriptor_t desc, s
     #endif
     #ifdef ENABLE_METAX_API
         GET(INFINI_DEVICE_METAX, metax);
-    #endif */
+    #endif 
     default:
         return INFINI_STATUS_DEVICE_TYPE_NOT_SUPPORTED;
     }
@@ -125,7 +124,6 @@ __C infiniStatus_t infiniopAcos(
     #ifdef ENABLE_MOORE_API
         CALCULATE(INFINI_DEVICE_MOORE, moore);
     #endif
-    /* 其他后端按需开启
     #ifdef ENABLE_ILUVATAR_API
         CALCULATE(INFINI_DEVICE_ILUVATAR, nvidia);
     #endif
@@ -134,7 +132,7 @@ __C infiniStatus_t infiniopAcos(
     #endif
     #ifdef ENABLE_METAX_API
         CALCULATE(INFINI_DEVICE_METAX, metax);
-    #endif */
+    #endif 
     default:
         return INFINI_STATUS_DEVICE_TYPE_NOT_SUPPORTED;
     }
@@ -161,7 +159,6 @@ __C infiniStatus_t infiniopDestroyAcosDescriptor(infiniopAcosDescriptor_t desc) 
     #ifdef ENABLE_MOORE_API
         DELETE(INFINI_DEVICE_MOORE, moore);
     #endif
-    /* 其他后端按需开启
     #ifdef ENABLE_ILUVATAR_API
         DELETE(INFINI_DEVICE_ILUVATAR, nvidia);
     #endif
@@ -170,7 +167,7 @@ __C infiniStatus_t infiniopDestroyAcosDescriptor(infiniopAcosDescriptor_t desc) 
     #endif
     #ifdef ENABLE_METAX_API
         DELETE(INFINI_DEVICE_METAX, metax);
-    #endif */
+    #endif 
     default:
         return INFINI_STATUS_DEVICE_TYPE_NOT_SUPPORTED;
     }

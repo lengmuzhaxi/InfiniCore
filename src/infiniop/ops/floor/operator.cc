@@ -93,7 +93,7 @@ __C infiniStatus_t infiniopGetFloorWorkspaceSize(infiniopFloorDescriptor_t desc,
     #ifdef ENABLE_MOORE_API
         GET(INFINI_DEVICE_MOORE, moore);
     #endif
-    /*#ifdef ENABLE_ILUVATAR_API
+    #ifdef ENABLE_ILUVATAR_API
         GET(INFINI_DEVICE_ILUVATAR, nvidia);
     #endif
     #ifdef ENABLE_QY_API
@@ -101,7 +101,7 @@ __C infiniStatus_t infiniopGetFloorWorkspaceSize(infiniopFloorDescriptor_t desc,
     #endif
     #ifdef ENABLE_METAX_API
         GET(INFINI_DEVICE_METAX, metax);
-    #endif*/
+    #endif
     default:
         return INFINI_STATUS_DEVICE_TYPE_NOT_SUPPORTED;
     }
@@ -139,7 +139,7 @@ __C infiniStatus_t infiniopFloor(
     #ifdef ENABLE_MOORE_API
         CALCULATE(INFINI_DEVICE_MOORE, moore);
     #endif
-    /*#ifdef ENABLE_ILUVATAR_API
+    #ifdef ENABLE_ILUVATAR_API
         CALCULATE(INFINI_DEVICE_ILUVATAR, nvidia);
     #endif
     #ifdef ENABLE_QY_API
@@ -147,7 +147,7 @@ __C infiniStatus_t infiniopFloor(
     #endif
     #ifdef ENABLE_METAX_API
         CALCULATE(INFINI_DEVICE_METAX, metax);
-    #endif*/
+    #endif
     default:
         return INFINI_STATUS_DEVICE_TYPE_NOT_SUPPORTED;
     }
@@ -177,7 +177,7 @@ __C infiniStatus_t infiniopDestroyFloorDescriptor(infiniopFloorDescriptor_t desc
     #ifdef ENABLE_MOORE_API
         DELETE(INFINI_DEVICE_MOORE, moore);
     #endif
-    /*#ifdef ENABLE_ILUVATAR_API
+    #ifdef ENABLE_ILUVATAR_API
         DELETE(INFINI_DEVICE_ILUVATAR, nvidia);
     #endif
     #ifdef ENABLE_QY_API
@@ -185,7 +185,7 @@ __C infiniStatus_t infiniopDestroyFloorDescriptor(infiniopFloorDescriptor_t desc
     #endif
     #ifdef ENABLE_METAX_API
         DELETE(INFINI_DEVICE_METAX, metax);
-    #endif*/
+    #endif
     default:
         return INFINI_STATUS_DEVICE_TYPE_NOT_SUPPORTED;
     }

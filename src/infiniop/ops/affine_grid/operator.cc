@@ -14,11 +14,9 @@
 #ifdef ENABLE_MOORE_API
 #include "moore/affine_grid_moore.h"
 #endif
-
-// 其他后端暂省略
-// #ifdef ENABLE_METAX_API
-// #include "metax/affine_grid_metax.h"
-// #endif
+#ifdef ENABLE_METAX_API
+#include "metax/affine_grid_metax.h"
+#endif
 
 __C infiniStatus_t infiniopCreateAffineGridDescriptor(
     infiniopHandle_t handle,
@@ -48,15 +46,15 @@ __C infiniStatus_t infiniopCreateAffineGridDescriptor(
 #ifdef ENABLE_MOORE_API
         CREATE(INFINI_DEVICE_MOORE, moore);
 #endif
-
-/*
+#ifdef ENABLE_METAX_API
+        CREATE(INFINI_DEVICE_METAX, metax);
+#endif
 #ifdef ENABLE_ILUVATAR_API
         CREATE(INFINI_DEVICE_ILUVATAR, nvidia);
 #endif
 #ifdef ENABLE_QY_API
         CREATE(INFINI_DEVICE_QY, nvidia);
 #endif
-*/
     default:
         return INFINI_STATUS_DEVICE_TYPE_NOT_SUPPORTED;
     }
@@ -82,15 +80,15 @@ __C infiniStatus_t infiniopGetAffineGridWorkspaceSize(infiniopAffineGridDescript
 #ifdef ENABLE_MOORE_API
         GET(INFINI_DEVICE_MOORE, moore);
 #endif
-
-/*
 #ifdef ENABLE_ILUVATAR_API
         GET(INFINI_DEVICE_ILUVATAR, nvidia);
+#endif
+#ifdef ENABLE_METAX_API
+        GET(INFINI_DEVICE_METAX, metax);
 #endif
 #ifdef ENABLE_QY_API
         GET(INFINI_DEVICE_QY, nvidia);
 #endif
-*/
     default:
         return INFINI_STATUS_DEVICE_TYPE_NOT_SUPPORTED;
     }
@@ -124,15 +122,16 @@ __C infiniStatus_t infiniopAffineGrid(
 #ifdef ENABLE_MOORE_API
         CALCULATE(INFINI_DEVICE_MOORE, moore);
 #endif
-
-/*
+#ifdef ENABLE_METAX_API
+        CALCULATE(INFINI_DEVICE_METAX, metax);
+#endif
 #ifdef ENABLE_ILUVATAR_API
         CALCULATE(INFINI_DEVICE_ILUVATAR, nvidia);
 #endif
 #ifdef ENABLE_QY_API
         CALCULATE(INFINI_DEVICE_QY, nvidia);
 #endif
-*/
+
 
     default:
         return INFINI_STATUS_DEVICE_TYPE_NOT_SUPPORTED;
@@ -161,16 +160,15 @@ infiniopDestroyAffineGridDescriptor(infiniopAffineGridDescriptor_t desc) {
 #ifdef ENABLE_MOORE_API
         DELETE(INFINI_DEVICE_MOORE, moore);
 #endif
-
-/*
+#ifdef ENABLE_METAX_API
+        DELETE(INFINI_DEVICE_METAX, metax);
+#endif
 #ifdef ENABLE_ILUVATAR_API
         DELETE(INFINI_DEVICE_ILUVATAR, nvidia);
 #endif
 #ifdef ENABLE_QY_API
         DELETE(INFINI_DEVICE_QY, nvidia);
 #endif
-*/
-
     default:
         return INFINI_STATUS_DEVICE_TYPE_NOT_SUPPORTED;
     }

@@ -3,9 +3,15 @@
 
 #include <cmath>
 #include <type_traits>
-#include <cuda_fp16.h>
-#include <cuda_bf16.h>
-
+#if defined(__MACA__) || defined(__MACACC__)
+    #include <maca_fp16.h>
+    #include <maca_bfloat16.h>
+    using nv_bfloat162 = __maca_bfloat162;
+    using nv_bfloat16 = __maca_bfloat16;
+#else
+    #include <cuda_fp16.h>
+    #include <cuda_bf16.h>
+#endif
 namespace op::affine_grid::cuda {
 
 // 类型转换辅助函数 (保持不变)

@@ -1,7 +1,7 @@
 #ifndef __TAKE_CUDA_H__
 #define __TAKE_CUDA_H__
 
-#include <cuda_runtime.h>
+//#include <cuda_runtime.h>
 #include <cstdint>
 
 namespace op::take::cuda {
