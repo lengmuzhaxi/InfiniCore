@@ -1,6 +1,4 @@
 #include "../../../elementwise/nvidia/elementwise_nvidia.cuh"
-
-// 引入核心计算 Functor (我们在 src/infiniop/ops/floor/cuda/floor_cuda.h 中定义的)
 #include "../cuda/kernel.cuh"
 #include "floor_nvidia.cuh"
 
@@ -46,10 +44,6 @@ infiniStatus_t Descriptor::calculate(
         return INFINI_STATUS_INSUFFICIENT_WORKSPACE;
     }
 
-    // -----------------------------------------------------------
-    // 2. 算子分发：将 GeluOp 替换为 FloorOp
-    //    模板参数 <256, ...> 表示 CUDA Block Size
-    // -----------------------------------------------------------
     switch (_dtype) {
     // === 浮点类型 ===
     case INFINI_DTYPE_BF16:

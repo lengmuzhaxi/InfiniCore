@@ -1,9 +1,6 @@
 from typing import Optional
 from infinicore.lib import _infinicore
 from infinicore.tensor import Tensor
-
-# 映射 Reduction 字符串到整数 (与 C++ 后端枚举保持一致)
-# 0: None, 1: Mean, 2: Sum
 _REDUCTION_MODES = {
     "none": 0,
     "mean": 1,
@@ -36,8 +33,7 @@ def smooth_l1_loss(
         Tensor: The loss value.
     """
     
-    # 1. 确保输入连续 (Contiguous)
-    # 对于 Elementwise 相关的 Loss 计算，内存连续可以防止底层 Kernel 因 stride 问题读取错误。
+   
     if not input.is_contiguous():
         input = input.contiguous()
     if not target.is_contiguous():

@@ -1,7 +1,7 @@
 #ifndef __SMOOTH_L1_LOSS_CUDA_CUH__
 #define __SMOOTH_L1_LOSS_CUDA_CUH__
 
-//#include <cuda_runtime.h>
+#include <cuda_runtime.h>
 #if defined(__MACA__) || defined(__MACACC__)
     #include <maca_fp16.h>
     #include <maca_bfloat16.h>

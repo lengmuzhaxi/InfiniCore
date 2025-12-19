@@ -13,6 +13,9 @@
 #include "infiniop/ops/conv.h"
 #include "infiniop/ops/dequantize_awq.h"
 #include "infiniop/ops/floor.h"
+#include "infiniop/ops/floor_divide.h"
+#include "infiniop/ops/flipud.h"
+#include "infiniop/ops/float_power.h"
 #include "infiniop/ops/gelu.h"
 #include "infiniop/ops/gemm.h"
 #include "infiniop/ops/hypot.h"
@@ -34,6 +37,7 @@
 #include "infiniop/ops/softmax.h"
 #include "infiniop/ops/softplus.h"
 #include "infiniop/ops/sub.h"
+#include "infiniop/ops/scatter.h"
 #include "infiniop/ops/swiglu.h"
 #include "infiniop/ops/tanh.h"
 #include "infiniop/ops/take.h"
@@ -41,5 +45,5 @@
 #include "infiniop/ops/topksoftmax.h"
 #include "infiniop/ops/zeros.h"
 #include "infiniop/tensor_descriptor.h"
-
+#include "infiniop/ops/multi_margin_loss.h"
 #endif // __INFINIOP_API_H__

@@ -110,11 +110,8 @@ class OpTest(BaseOperatorTest):
 
     def torch_operator(self, *args, **kwargs):
         return torch.float_power(*args, **kwargs)
-
-
-# def infinicore_operator(self, *args, **kwargs):
-# """InfiniCore implementation (operator not yet available)."""
-#     return infinicore.float_power(*args, **kwargs)
+    def infinicore_operator(self, *args, **kwargs):
+     return infinicore.float_power(*args, **kwargs)
 
 
 def main():

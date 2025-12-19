@@ -114,9 +114,8 @@ class OpTest(BaseOperatorTest):
     def torch_operator(self, *args, **kwargs):
         return torch.scatter_reduce(*args, **kwargs)
 
-    # def infinicore_operator(self, *args, **kwargs):
-    #     """InfiniCore implementation (operator not yet available)."""
-    #     return infinicore.scatter_reduce(*args, **kwargs)
+    def infinicore_operator(self, *args, **kwargs):
+         return infinicore.scatter_reduce(*args, **kwargs)
 
 
 def main():

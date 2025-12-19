@@ -43,15 +43,23 @@ from infinicore.ops.add import add
 from infinicore.ops.addbmm import addbmm
 from infinicore.ops.attention import attention
 from infinicore.ops.floor import floor
+from infinicore.ops.floor_divide import floor_divide
+from infinicore.ops.float_power import float_power
+from infinicore.ops.flipud import flipud
 from infinicore.ops.hypot import hypot
 from infinicore.ops.index_add import index_add
 from infinicore.ops.index_copy import index_copy
 from infinicore.ops.acos import acos
+from infinicore.ops.scatter import scatter
 from infinicore.ops.matmul import matmul
 from infinicore.ops.mul import mul
 from infinicore.ops.narrow import narrow
 from infinicore.ops.rearrange import rearrange
+
 from infinicore.ops.take import take
+# [新增] 导入 scatter_reduce
+from infinicore.ops.scatter_reduce import scatter_reduce
+
 from infinicore.tensor import (
     Tensor,
     empty,
@@ -79,6 +87,7 @@ __all__ = [
     "get_device",
     "get_device_count",
     "get_stream",
+    "flipud",
     "set_device",
     "sync_device",
     "sync_stream",
@@ -116,9 +125,15 @@ __all__ = [
     "mul",
     "narrow",
     "rearrange",
+    # [新增] 导出 scatter_reduce
+    "scatter_reduce",
+    "scatter",
     "empty",
     "empty_like",
     "floor",
+    "floor_divide",
+    "float_power",
+    "flipud",
     "from_blob",
     "from_list",
     "from_numpy",

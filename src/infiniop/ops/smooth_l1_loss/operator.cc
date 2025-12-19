@@ -14,7 +14,6 @@
 #include "metax/smooth_l1_loss_metax.h"
 #endif
 
-// 【新增】Moore 后端头文件
 #ifdef ENABLE_MOORE_API
 #include "moore/smooth_l1_loss_moore.h"
 #endif
@@ -60,7 +59,6 @@ __C infiniStatus_t infiniopCreateSmoothL1LossDescriptor(
     #ifdef ENABLE_METAX_API
         CREATE(INFINI_DEVICE_METAX, metax);
     #endif
-    // 【新增】Moore 分支
     #ifdef ENABLE_MOORE_API
         CREATE(INFINI_DEVICE_MOORE, moore);
     #endif
@@ -96,7 +94,6 @@ __C infiniStatus_t infiniopGetSmoothL1LossWorkspaceSize(infiniopSmoothL1LossDesc
     #ifdef ENABLE_METAX_API
         GET(INFINI_DEVICE_METAX, metax);
     #endif
-    // 【新增】Moore 分支
     #ifdef ENABLE_MOORE_API
         GET(INFINI_DEVICE_MOORE, moore);
     #endif
@@ -139,7 +136,6 @@ __C infiniStatus_t infiniopSmoothL1Loss(
     #ifdef ENABLE_METAX_API
         CALCULATE(INFINI_DEVICE_METAX, metax);
     #endif
-    // 【新增】Moore 分支
     #ifdef ENABLE_MOORE_API
         CALCULATE(INFINI_DEVICE_MOORE, moore);
     #endif
@@ -175,7 +171,6 @@ __C infiniStatus_t infiniopDestroySmoothL1LossDescriptor(infiniopSmoothL1LossDes
     #ifdef ENABLE_METAX_API
         DELETE(INFINI_DEVICE_METAX, metax);
     #endif
-    // 【新增】Moore 分支
     #ifdef ENABLE_MOORE_API
         DELETE(INFINI_DEVICE_MOORE, moore);
     #endif

@@ -10,17 +10,22 @@
 #include "ops/causal_softmax.hpp"
 #include "ops/embedding.hpp"
 #include "ops/floor.hpp"
+#include "ops/floor_divide.hpp"
+#include "ops/float_power.hpp"
+#include "ops/flipud.hpp"
 #include "ops/hypot.hpp"
 #include "ops/index_add.hpp"
 #include "ops/index_copy.hpp"
 #include "ops/linear.hpp"
 #include "ops/matmul.hpp"
+#include "ops/multi_margin_loss.hpp"
 #include "ops/mul.hpp"
 #include "ops/random_sample.hpp"
 #include "ops/rearrange.hpp"
 #include "ops/rms_norm.hpp"
 #include "ops/rope.hpp"
 #include "ops/silu.hpp"
+#include "ops/scatter.hpp"
 #include "ops/smooth_l1_loss.hpp"
 #include "ops/swiglu.hpp"
 #include "ops/take.hpp"
@@ -39,15 +44,20 @@ inline void bind(py::module &m) {
     bind_causal_softmax(m);
     bind_random_sample(m);
     bind_floor(m);
+    bind_floor_divide(m);
+    bind_float_power(m);
+    bind_flipud(m);
     bind_hypot(m);
     bind_index_add(m);
     bind_index_copy(m);
     bind_linear(m);
     bind_matmul(m);
     bind_mul(m);
+    bind_multi_margin_loss(m);
     bind_rearrange(m);
     bind_rms_norm(m);
     bind_silu(m);
+    bind_scatter(m);
     bind_smooth_l1_loss(m);
     bind_swiglu(m);
     bind_take(m);

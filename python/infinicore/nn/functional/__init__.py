@@ -6,10 +6,10 @@ from .rms_norm import rms_norm
 from .rope import RopeAlgo, rope
 from .silu import silu
 from .swiglu import swiglu
-from infinicore.ops.adaptive_avg_pool1d import adaptive_avg_pool1d
+from .adaptive_avg_pool1d import adaptive_avg_pool1d
 from infinicore.ops.affine_grid import affine_grid  
+from .multi_margin_loss import multi_margin_loss
 from infinicore.ops.smooth_l1_loss import smooth_l1_loss
-
 __all__ = [
     "adaptive_avg_pool1d",
     "affine_grid",  
@@ -20,6 +20,8 @@ __all__ = [
     "smooth_l1_loss",
     "swiglu",
     "linear",
+    "lp_pool2d",
+    "multi_margin_loss",
     "embedding",
     "rope",
     "RopeAlgo",

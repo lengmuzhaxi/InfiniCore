@@ -3,7 +3,7 @@
 
 #include <cmath>
 #include <type_traits> // 必须包含：用于 std::is_integral_v 等检查
-#if defined(__MACA__) || defined(__MACACC__)
+#if ENABLE_METAX_API
     #include <maca_fp16.h>
     #include <maca_bfloat16.h>
     using nv_bfloat162 = __maca_bfloat162;
@@ -48,7 +48,6 @@ public:
         } 
         // 6. Double
         else if constexpr (std::is_same_v<T, double>) {
-            // 【关键修复】使用 ::floor 避免与 namespace op::floor 冲突
             return ::floor(x);
         }
         // 7. 整数
@@ -57,7 +56,6 @@ public:
         }
         // 8. 兜底
         else {
-            // 【关键修复】使用 ::floor
             return ::floor(x);
         }
     }

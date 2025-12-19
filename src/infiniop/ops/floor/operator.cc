@@ -14,20 +14,11 @@
 #ifdef ENABLE_METAX_API
 #include "metax/floor_metax.h"
 #endif
-
-// ==========================================
-// 1. 添加 MOORE 头文件引用
-// ==========================================
 #ifdef ENABLE_MOORE_API
 #include "moore/floor_moore.h"
 #endif
-// ==========================================
 
 extern "C" {
-
-// =======================================================================
-// 1. 创建算子描述符
-// =======================================================================
 __C infiniStatus_t infiniopCreateFloorDescriptor(
     infiniopHandle_t handle,
     infiniopFloorDescriptor_t *desc_ptr,
@@ -58,9 +49,7 @@ __C infiniStatus_t infiniopCreateFloorDescriptor(
     #ifdef ENABLE_METAX_API
         CREATE(INFINI_DEVICE_METAX, metax);
     #endif
-    // ==========================================
-    // 添加 MOORE 分支
-    // ==========================================
+
     #ifdef ENABLE_MOORE_API
         CREATE(INFINI_DEVICE_MOORE, moore);
     #endif
