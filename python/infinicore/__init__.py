@@ -57,11 +57,6 @@ from infinicore.ops.mul import mul
 from infinicore.ops.vander import vander
 from infinicore.ops.narrow import narrow
 from infinicore.ops.rearrange import rearrange
-
-from infinicore.ops.take import take
-# [新增] 导入 scatter_reduce
-from infinicore.ops.scatter_reduce import scatter_reduce
-
 from infinicore.tensor import (
     Tensor,
     empty,
@@ -126,6 +121,8 @@ __all__ = [
     "matmul",
     "mul",
     "narrow",
+    "squeeze",
+    "unsqueeze",
     "rearrange",
     # [新增] 导出 scatter_reduce
     "scatter_reduce",
