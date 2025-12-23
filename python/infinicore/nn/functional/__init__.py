@@ -5,6 +5,7 @@ from .random_sample import random_sample
 from .rms_norm import rms_norm
 from .rope import RopeAlgo, rope
 from .silu import silu
+from .unfold import unfold
 from .swiglu import swiglu
 from .adaptive_avg_pool1d import adaptive_avg_pool1d
 from infinicore.ops.affine_grid import affine_grid  
@@ -24,5 +25,6 @@ __all__ = [
     "multi_margin_loss",
     "embedding",
     "rope",
+    "unfold",
     "RopeAlgo",
 ]

@@ -43,6 +43,7 @@ from infinicore.ops.add import add
 from infinicore.ops.addbmm import addbmm
 from infinicore.ops.attention import attention
 from infinicore.ops.floor import floor
+from infinicore.ops.logcumsumexp import logcumsumexp
 from infinicore.ops.floor_divide import floor_divide
 from infinicore.ops.float_power import float_power
 from infinicore.ops.flipud import flipud
@@ -53,6 +54,7 @@ from infinicore.ops.acos import acos
 from infinicore.ops.scatter import scatter
 from infinicore.ops.matmul import matmul
 from infinicore.ops.mul import mul
+from infinicore.ops.vander import vander
 from infinicore.ops.narrow import narrow
 from infinicore.ops.rearrange import rearrange
 
@@ -139,10 +141,12 @@ __all__ = [
     "from_numpy",
     "from_torch",
     "hypot",
+    "logcumsumexp",
     "ones",
     "strided_empty",
     "strided_from_blob",
     "take",
+    "vander",
     "zeros",
 ]
 

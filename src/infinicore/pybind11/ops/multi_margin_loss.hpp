@@ -8,22 +8,13 @@ namespace py = pybind11;
 namespace infinicore::ops {
 
 inline void bind_multi_margin_loss(py::module &m) {
-    // -------------------------------------------------------------------------
-    // 1. 绑定 out-of-place 接口
-    // 修改点：使用 Lambda 表达式代替直接函数指针
-    // -------------------------------------------------------------------------
     m.def("multi_margin_loss",
         [](const Tensor& input, const Tensor& target, py::object weight, int p, float margin, int reduction) {
             // C++ 层的 Tensor 通常有一个默认构造函数，表示"Undefined"或"Empty"
             Tensor weight_tensor; 
-            
-            // 如果 Python 传进来的不是 None，则转换成 Tensor
             if (!weight.is_none()) {
                 weight_tensor = weight.cast<Tensor>();
             }
-            
-            // 调用底层的 C++ 实现
-            // 此时 weight_tensor 要么是用户传的 Tensor，要么是空的 Tensor
             return op::multi_margin_loss(input, target, weight_tensor, p, margin, reduction);
         },
         py::arg("input"),

@@ -17,6 +17,7 @@
 #include "ops/index_add.hpp"
 #include "ops/index_copy.hpp"
 #include "ops/linear.hpp"
+#include "ops/logcumsumexp.hpp"
 #include "ops/matmul.hpp"
 #include "ops/multi_margin_loss.hpp"
 #include "ops/mul.hpp"
@@ -29,6 +30,8 @@
 #include "ops/smooth_l1_loss.hpp"
 #include "ops/swiglu.hpp"
 #include "ops/take.hpp"
+#include "ops/vander.hpp"
+#include "ops/unfold.hpp"
 
 namespace py = pybind11;
 
@@ -51,6 +54,7 @@ inline void bind(py::module &m) {
     bind_index_add(m);
     bind_index_copy(m);
     bind_linear(m);
+    bind_logcumsumexp(m);
     bind_matmul(m);
     bind_mul(m);
     bind_multi_margin_loss(m);
@@ -61,6 +65,8 @@ inline void bind(py::module &m) {
     bind_smooth_l1_loss(m);
     bind_swiglu(m);
     bind_take(m);
+    bind_vander(m);
+    bind_unfold(m);
     bind_rope(m);
     bind_embedding(m);
 }

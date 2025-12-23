@@ -38,9 +38,6 @@ def multi_margin_loss(
     if reduction not in _REDUCTION_MODES:
         raise ValueError(f"{reduction} is not a valid value for reduction")
     reduction_val = _REDUCTION_MODES[reduction]
-
-    # 分发计算 
-    # 保持修正后的参数顺序: (input, target, weight, p, margin, reduction)
     if out is not None:
         _infinicore.multi_margin_loss_(
             out._underlying,
