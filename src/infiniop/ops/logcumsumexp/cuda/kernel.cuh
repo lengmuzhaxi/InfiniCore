@@ -2,6 +2,7 @@
 #define __LOGCUMSUMEXP_CUDA_CUH__
 
 #include <cuda_runtime.h>
+
 #if defined ENABLE_METAX_API
     #include <maca_fp16.h>
     #include <maca_bfloat16.h>
@@ -11,40 +12,54 @@
 #endif
 
 #include <cmath>
+#include <limits>
 
 namespace op::logcumsumexp::cuda {
 
 // ============================================================
-// 数值稳定 log-sum-exp prefix state
+// 数值稳定 LogSumExp prefix state
+// 等价于：log(sum(exp(x[0:i])))
 // ============================================================
 
 struct LSEState {
-    float m;
-    float s;
+    float m;   // running max
+    float s;   // sum(exp(x - m))
 
+    // 数学单位元：log(0) = -inf
     __device__ __forceinline__ static LSEState identity() {
-        return {-1e38f, 0.0f};
+        return { -INFINITY, 0.0f };
     }
 
+    // prefix 更新
     __device__ __forceinline__ void update(float v) {
-        float nm = fmaxf(m, v);
-        s = s * expf(m - nm) + expf(v - nm);
-        m = nm;
+        if (m == -INFINITY) {
+            // 第一个元素
+            m = v;
+            s = 1.0f;
+        } else if (v > m) {
+            // max 发生变化，需要 rescale
+            s = s * expf(m - v) + 1.0f;
+            m = v;
+        } else {
+            s += expf(v - m);
+        }
     }
 
+    // 当前 log-sum-exp 值
     __device__ __forceinline__ float value() const {
-        return (s <= 0.f) ? -1e38f : m + logf(s);
+        return (s == 0.0f) ? -INFINITY : (m + logf(s));
     }
 };
 
 // ============================================================
-// kernel：一个 thread = 一个 (outer, inner) 向量
+// kernel：一个 thread 负责一个 (outer, inner) 前缀向量
 // ============================================================
 
 template <typename T>
 __global__ void logcumsumexp_kernel(
     T* __restrict__ y,
     const T* __restrict__ x,
+
     size_t outer_size,
     size_t axis_size,
     size_t inner_size,
@@ -58,8 +73,8 @@ __global__ void logcumsumexp_kernel(
     size_t y_outer_stride,
 
     bool exclusive,
-    bool reverse) {
-
+    bool reverse
+) {
     size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
     size_t num_vec = outer_size * inner_size;
     if (tid >= num_vec) return;
@@ -67,7 +82,7 @@ __global__ void logcumsumexp_kernel(
     size_t o = tid / inner_size;
     size_t i = tid % inner_size;
 
-    // ✅ 正确的 base offset（不再猜）
+    // base offset（正确处理 stride）
     size_t x_base = o * x_outer_stride + i * x_inner_stride;
     size_t y_base = o * y_outer_stride + i * y_inner_stride;
 
@@ -82,15 +97,28 @@ __global__ void logcumsumexp_kernel(
         float v = static_cast<float>(x[x_off]);
 
         if (exclusive) {
+            // y[i] = log(sum(exp(x[:i])))
             y[y_off] = static_cast<T>(state.value());
             state.update(v);
         } else {
+            // y[i] = log(sum(exp(x[:i+1])))
             state.update(v);
             y[y_off] = static_cast<T>(state.value());
         }
+
+        // ===== 调试用（需要时打开）=====
+        /*
+        if (o == 0 && i == 0 && k < 5) {
+            printf(
+                "[CUDA] k=%zu v=%f m=%f s=%f out=%f\n",
+                k, v, state.m, state.s,
+                static_cast<float>(y[y_off])
+            );
+        }
+        */
     }
 }
 
 } // namespace op::logcumsumexp::cuda
 
-#endif
+#endif // __LOGCUMSUMEXP_CUDA_CUH__

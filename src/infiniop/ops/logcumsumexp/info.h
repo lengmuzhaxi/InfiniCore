@@ -22,11 +22,11 @@ public:
 
     size_t _x_axis_stride;
     size_t _x_inner_stride;
-    size_t _x_outer_stride;   // outer stride
+    size_t _x_outer_stride;
 
     size_t _y_axis_stride;
     size_t _y_inner_stride;
-    size_t _y_outer_stride;   // outer stride
+    size_t _y_outer_stride;
 
     int dtype() const { return _dtype; }
     int axis() const { return _axis; }
@@ -72,9 +72,6 @@ public:
         int exclusive,
         int reverse) {
 
-        // ================================
-        // 基本合法性检查
-        // ================================
         if (y_desc->ndim() != x_desc->ndim()) {
             return INFINI_STATUS_BAD_TENSOR_SHAPE;
         }
@@ -110,33 +107,27 @@ public:
         }
 
         // ================================
-        // 物理 stride（核心）
+        // 物理 stride 计算 (已修复)
         // ================================
-        size_t x_axis_stride =
-            static_cast<size_t>(x_desc->stride(static_cast<size_t>(axis)));
-        size_t y_axis_stride =
-            static_cast<size_t>(y_desc->stride(static_cast<size_t>(axis)));
+        
+        // 1. Axis Stride
+        size_t x_axis_stride = static_cast<size_t>(x_desc->stride(axis));
+        size_t y_axis_stride = static_cast<size_t>(y_desc->stride(axis));
 
-        size_t x_inner_stride =
-            (static_cast<size_t>(axis) + 1 < ndim)
-                ? static_cast<size_t>(x_desc->stride(static_cast<size_t>(axis) + 1))
-                : 1;
+        // 2. Inner Stride
+        // [关键修复]: 
+        // Kernel 将 inner 部分视为被展平的一维数组 (0 到 inner-1)。
+        // 对于连续 (Contiguous) 的 Tensor，这部分数据的内存是连续的。
+        // 因此，无论 inner 包含多少个逻辑维度，访问下一个元素的物理偏移量固定为 1。
+        // 原先使用 stride(axis + 1) 会导致多维 inner 时跳过数据。
+        size_t x_inner_stride = 1;
+        size_t y_inner_stride = 1;
 
-        size_t y_inner_stride =
-            (static_cast<size_t>(axis) + 1 < ndim)
-                ? static_cast<size_t>(y_desc->stride(static_cast<size_t>(axis) + 1))
-                : 1;
-
-        // outer stride：axis 前一维的真实 stride
-        size_t x_outer_stride =
-            (axis > 0)
-                ? static_cast<size_t>(x_desc->stride(static_cast<size_t>(axis) - 1))
-                : x_desc->stride(0) * x_desc->shape()[0];  // ✅ shape()[0]
-
-        size_t y_outer_stride =
-            (axis > 0)
-                ? static_cast<size_t>(y_desc->stride(static_cast<size_t>(axis) - 1))
-                : y_desc->stride(0) * y_desc->shape()[0];  // ✅ shape()[0]
+        // 3. Outer Stride
+        // 如果 axis == 0，outer_size 为 1，outer stride 设为 0。
+        // 否则取 axis 前一维的 stride，代表跨越整个 axis+inner 数据块的步长。
+        size_t x_outer_stride = (axis == 0) ? 0 : static_cast<size_t>(x_desc->stride(axis - 1));
+        size_t y_outer_stride = (axis == 0) ? 0 : static_cast<size_t>(y_desc->stride(axis - 1));
 
         return utils::Result<LogCumSumExpInfo>(LogCumSumExpInfo{
             x_desc->dtype(),
