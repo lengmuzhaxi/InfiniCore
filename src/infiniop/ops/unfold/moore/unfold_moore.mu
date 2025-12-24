@@ -1,10 +1,10 @@
-#include "unfold_nvidia.cuh"
-#include "../cuda/kernel.cuh"
-#include "../../../handle.h"
+#include "unfold_moore.h"
+#include "unfold_moore_kernel.h"
+#include "../../../devices/moore/moore_handle.h"
 #include <cstdint>
 #include <algorithm>
 
-namespace op::unfold::nvidia {
+namespace op::unfold::moore {
 
 // ==================================================================
 // Kernel Launch Logic
@@ -19,10 +19,10 @@ void launch_kernel(
     // 1. 准备指针
     auto in_ptr = reinterpret_cast<const T *>(input);
     auto out_ptr = reinterpret_cast<T *>(output);
-    auto cuda_stream = reinterpret_cast<cudaStream_t>(stream);
+    auto musa_stream = reinterpret_cast<musaStream_t>(stream);
 
     // 2. 准备参数 (从 Info 的向量中解包)
-    // 注意：目前的 CUDA Kernel 仅支持 2D Spatial (NCHW)，这里取前两个维度
+    // 注意：目前的 Kernel 仅支持 2D Spatial (NCHW)，这里取前两个维度
     if (info._kernel_sizes.size() < 2) {
         // 异常情况处理，或者直接返回
         return;
@@ -53,9 +53,9 @@ void launch_kernel(
     size_t block_size = 256;
     size_t grid_size = (total_elements + block_size - 1) / block_size;
 
-    // 4. 调用 CUDA Kernel
-    op::unfold::cuda::unfold_kernel<T>
-        <<<grid_size, block_size, 0, cuda_stream>>>(
+    // 4. 调用 Moore Kernel
+    op::unfold::moore::unfold_kernel<T>
+        <<<grid_size, block_size, 0, musa_stream>>>(
             out_ptr, in_ptr,
             C, H, W,
             out_h, out_w,
@@ -86,7 +86,7 @@ infiniStatus_t Descriptor::create(
     const int *paddings,
     const int *dilations) {
 
-    auto handle = reinterpret_cast<const infiniopHandle_t>(handle_);
+    auto handle = reinterpret_cast<device::moore::Handle *>(handle_);
 
     // 1. 创建并校验 Info
     // 使用新的 infer 接口
@@ -122,7 +122,7 @@ infiniStatus_t Descriptor::calculate(
         launch_kernel<half>(output, input, _info, stream);
         break;
     case INFINI_DTYPE_BF16:
-        launch_kernel<nv_bfloat16>(output, input, _info, stream);
+        launch_kernel<__mt_bfloat16>(output, input, _info, stream);
         break;
     case INFINI_DTYPE_F32:
         launch_kernel<float>(output, input, _info, stream);
@@ -137,4 +137,4 @@ infiniStatus_t Descriptor::calculate(
     return INFINI_STATUS_SUCCESS;
 }
 
-} // namespace op::unfold::nvidia
+} // namespace op::unfold::moore
