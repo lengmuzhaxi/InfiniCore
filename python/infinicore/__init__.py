@@ -44,11 +44,16 @@ from infinicore.ops.addbmm import addbmm
 from infinicore.ops.attention import attention
 from infinicore.ops.floor import floor
 from infinicore.ops.logcumsumexp import logcumsumexp
+from infinicore.ops.ldexp import ldexp
+from infinicore.ops.lerp import lerp
+from infinicore.ops.logical_and import logical_and
+from infinicore.ops.logical_not import logical_not
 from infinicore.ops.floor_divide import floor_divide
 from infinicore.ops.float_power import float_power
 from infinicore.ops.flipud import flipud
 from infinicore.ops.hypot import hypot
 from infinicore.ops.index_add import index_add
+from infinicore.ops.kthvalue import kthvalue
 from infinicore.ops.index_copy import index_copy
 from infinicore.ops.acos import acos
 from infinicore.ops.scatter import scatter
@@ -124,7 +129,7 @@ __all__ = [
     "squeeze",
     "unsqueeze",
     "rearrange",
-    # [新增] 导出 scatter_reduce
+    "lerp",
     "scatter_reduce",
     "scatter",
     "empty",
@@ -138,6 +143,10 @@ __all__ = [
     "from_numpy",
     "from_torch",
     "hypot",
+    "kthvalue",
+    "ldexp",
+    "logical_and",
+    "logical_not",
     "logcumsumexp",
     "ones",
     "strided_empty",
