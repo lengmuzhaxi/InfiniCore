@@ -42,7 +42,6 @@
 #include "ops/vander.hpp"
 #include "ops/unfold.hpp"
 #include "ops/upsample_bilinear.hpp"
-#include "ops/pairwise_distance.hpp"
 
 namespace py = pybind11;
 
@@ -76,7 +75,6 @@ inline void bind(py::module &m) {
     bind_multi_margin_loss(m);
     bind_margin_ranking_loss(m);
     bind_triplet_margin_loss(m);
-    bind_pairwise_distance(m);
     bind_paged_attention(m);
     bind_paged_caching(m);
     bind_rearrange(m);
