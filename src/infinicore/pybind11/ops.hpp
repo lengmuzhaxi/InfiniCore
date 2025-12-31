@@ -28,6 +28,8 @@
 #include "ops/margin_ranking_loss.hpp"
 #include "ops/triplet_margin_loss.hpp"
 #include "ops/mul.hpp"
+#include "ops/paged_attention.hpp"
+#include "ops/paged_caching.hpp"
 #include "ops/random_sample.hpp"
 #include "ops/rearrange.hpp"
 #include "ops/rms_norm.hpp"
@@ -75,6 +77,8 @@ inline void bind(py::module &m) {
     bind_margin_ranking_loss(m);
     bind_triplet_margin_loss(m);
     bind_pairwise_distance(m);
+    bind_paged_attention(m);
+    bind_paged_caching(m);
     bind_rearrange(m);
     bind_rms_norm(m);
     bind_silu(m);
