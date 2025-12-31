@@ -94,13 +94,19 @@ def compare_results(
         )
 
     # Choose comparison method based on data type
-    if is_integer_dtype(torch_result_from_infini.dtype) or is_integer_dtype(
-        torch_result.dtype
+    # Modified: Explicitly handle boolean types alongside integers for exact equality
+    if (
+        torch_result_from_infini.dtype == torch.bool
+        or torch_result.dtype == torch.bool
+        or is_integer_dtype(torch_result_from_infini.dtype)
+        or is_integer_dtype(torch_result.dtype)
     ):
-        # Exact equality for integer types
+        # Exact equality for integer and boolean types
         result_equal = torch.equal(torch_result_from_infini, torch_result)
         if debug_mode and not result_equal:
-            print("Integer tensor comparison failed - requiring exact equality")
+            print(
+                f"Tensor comparison failed (Type: {torch_result.dtype}) - requiring exact equality"
+            )
         return result_equal
     elif is_complex_dtype(torch_result_from_infini.dtype) or is_complex_dtype(
         torch_result.dtype
@@ -171,7 +177,7 @@ def create_test_comparator(config, atol, rtol, mode_name="", equal_nan=False):
             if hasattr(infini_result, "dtype"):
                 infini_dtype = infini_result.dtype
                 torch_dtype = to_torch_dtype(infini_dtype)
-                if is_integer_dtype(torch_dtype):
+                if is_integer_dtype(torch_dtype) or torch_dtype == torch.bool:
                     actual_atol = 0
                     actual_rtol = 0
         except:
@@ -213,11 +219,12 @@ def debug(actual, desired, atol=0, rtol=1e-2, equal_nan=False, verbose=True):
 
     print_discrepancy(actual, desired, atol, rtol, equal_nan, verbose)
 
-    import numpy as np
-
-    np.testing.assert_allclose(
-        actual.cpu(), desired.cpu(), rtol, atol, equal_nan, verbose=True
-    )
+    # For strict boolean/integer testing, we skip numpy assert_allclose as it may not handle bool well or be redundant
+    if actual.dtype != torch.bool and not is_integer_dtype(actual.dtype):
+        import numpy as np
+        np.testing.assert_allclose(
+            actual.cpu(), desired.cpu(), rtol, atol, equal_nan, verbose=True
+        )
 
 
 def print_discrepancy(
@@ -231,18 +238,30 @@ def print_discrepancy(
     import sys
 
     is_terminal = sys.stdout.isatty()
-    actual_isnan = torch.isnan(actual)
-    expected_isnan = torch.isnan(expected)
 
-    # Calculate difference mask
-    nan_mismatch = (
-        actual_isnan ^ expected_isnan if equal_nan else actual_isnan | expected_isnan
-    )
-    diff_mask = nan_mismatch | (
-        torch.abs(actual - expected) > (atol + rtol * torch.abs(expected))
-    )
-    diff_indices = torch.nonzero(diff_mask, as_tuple=False)
-    delta = actual - expected
+    # =========================================================
+    # Handle Boolean types specifically to avoid subtraction errors
+    # =========================================================
+    if actual.dtype == torch.bool:
+        # Boolean comparison using inequality (XOR)
+        diff_mask = actual != expected
+        # Convert to int for display purposes (0 or 1)
+        delta = diff_mask.to(torch.int32)
+        diff_indices = torch.nonzero(diff_mask, as_tuple=False)
+    else:
+        # Standard logic for Float/Int
+        actual_isnan = torch.isnan(actual)
+        expected_isnan = torch.isnan(expected)
+
+        # Calculate difference mask
+        nan_mismatch = (
+            actual_isnan ^ expected_isnan if equal_nan else actual_isnan | expected_isnan
+        )
+        diff_mask = nan_mismatch | (
+            torch.abs(actual - expected) > (atol + rtol * torch.abs(expected))
+        )
+        diff_indices = torch.nonzero(diff_mask, as_tuple=False)
+        delta = actual - expected
 
     # Display formatting
     col_width = [18, 20, 20, 20]
@@ -258,11 +277,24 @@ def print_discrepancy(
     if verbose:
         for idx in diff_indices:
             index_tuple = tuple(idx.tolist())
-            actual_str = f"{actual[index_tuple]:<{col_width[1]}.{decimal_places[1]}f}"
-            expected_str = (
-                f"{expected[index_tuple]:<{col_width[2]}.{decimal_places[2]}f}"
-            )
-            delta_str = f"{delta[index_tuple]:<{col_width[3]}.{decimal_places[3]}f}"
+            
+            # Formatting based on type
+            if actual.dtype == torch.bool:
+                # Convert items to int for cleaner display
+                actual_val = int(actual[index_tuple].item())
+                expected_val = int(expected[index_tuple].item())
+                delta_val = int(delta[index_tuple].item())
+                
+                actual_str = f"{actual_val:<{col_width[1]}}"
+                expected_str = f"{expected_val:<{col_width[2]}}"
+                delta_str = f"{delta_val:<{col_width[3]}}"
+            else:
+                actual_str = f"{actual[index_tuple]:<{col_width[1]}.{decimal_places[1]}f}"
+                expected_str = (
+                    f"{expected[index_tuple]:<{col_width[2]}.{decimal_places[2]}f}"
+                )
+                delta_str = f"{delta[index_tuple]:<{col_width[3]}.{decimal_places[3]}f}"
+
             print(
                 f" > Index: {str(index_tuple):<{col_width[0]}}"
                 f"actual: {add_color(actual_str, 31)}"
@@ -272,21 +304,28 @@ def print_discrepancy(
 
         print(f"  - Actual dtype: {actual.dtype}")
         print(f"  - Desired dtype: {expected.dtype}")
-        print(f"  - Atol: {atol}")
-        print(f"  - Rtol: {rtol}")
-        print(f"  - Equal NaN: {equal_nan}")
+        
+        # Only print tolerance for non-boolean types
+        if actual.dtype != torch.bool:
+            print(f"  - Atol: {atol}")
+            print(f"  - Rtol: {rtol}")
+            print(f"  - Equal NaN: {equal_nan}")
+
         print(
             f"  - Mismatched elements: {len(diff_indices)} / {actual.numel()} ({len(diff_indices) / actual.numel() * 100}%)"
         )
-        print(
-            f"  - Min(actual) : {torch.min(actual):<{col_width[1]}} | Max(actual) : {torch.max(actual):<{col_width[2]}}"
-        )
-        print(
-            f"  - Min(desired): {torch.min(expected):<{col_width[1]}} | Max(desired): {torch.max(expected):<{col_width[2]}}"
-        )
-        print(
-            f"  - Min(delta)  : {torch.min(delta):<{col_width[1]}} | Max(delta)  : {torch.max(delta):<{col_width[2]}}"
-        )
+        
+        # Min/Max stats are usually irrelevant for Boolean tensors
+        if actual.dtype != torch.bool:
+            print(
+                f"  - Min(actual) : {torch.min(actual):<{col_width[1]}} | Max(actual) : {torch.max(actual):<{col_width[2]}}"
+            )
+            print(
+                f"  - Min(desired): {torch.min(expected):<{col_width[1]}} | Max(desired): {torch.max(expected):<{col_width[2]}}"
+            )
+            print(
+                f"  - Min(delta)  : {torch.min(delta):<{col_width[1]}} | Max(delta)  : {torch.max(delta):<{col_width[2]}}"
+            )
         print("-" * total_width)
 
     return diff_indices
