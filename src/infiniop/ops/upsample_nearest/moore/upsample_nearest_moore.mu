@@ -1,15 +1,13 @@
-#include "upsample_nearest_nvidia.cuh"
-#include "../cuda/kernel.cuh"
+#include "upsample_nearest_moore.h"
+#include "upsample_nearest_moore_kernel.h"
 #include "../../../handle.h"
+#include <musa_runtime.h>
+#include <musa_fp16.h>
+#include <musa_bf16.h>
 #include <cstdint>
 #include <algorithm>
 
-namespace op::upsample_nearest::nvidia {
-
-template <typename T>
-static inline bool is_aligned(const void *ptr, size_t alignment) {
-    return reinterpret_cast<uintptr_t>(ptr) % alignment == 0;
-}
+namespace op::upsample_nearest::moore {
 
 // ==================================================================
 // Kernel Launch Logic
@@ -25,7 +23,7 @@ void launch_kernel(
     auto in_ptr = reinterpret_cast<const T *>(input);
     auto out_ptr = reinterpret_cast<T *>(output);
     
-    auto cuda_stream = reinterpret_cast<cudaStream_t>(stream);
+    auto musa_stream = reinterpret_cast<musaStream_t>(stream);
     
     // 2. Prepare Dimensions
     size_t N = info.n();
@@ -46,11 +44,11 @@ void launch_kernel(
     size_t block_size = 256;
     size_t grid_size = (total_elements + block_size - 1) / block_size;
     
-    // Cap grid size to avoid launch failures on huge tensors
+    // Cap grid size to avoid launch failures on huge tensors (handling via grid-stride loop)
     if (grid_size > 65535) grid_size = 65535; 
 
-    op::upsample_nearest::cuda::upsample_nearest_kernel<T>
-        <<<grid_size, block_size, 0, cuda_stream>>>(
+    op::upsample_nearest::moore::upsample_nearest_kernel<T>
+        <<<grid_size, block_size, 0, musa_stream>>>(
             out_ptr, 
             in_ptr, 
             N, C, H_in, W_in, H_out, W_out, 
@@ -102,7 +100,8 @@ infiniStatus_t Descriptor::calculate(
         launch_kernel<half>(output, input, _info, stream);
         break;
     case INFINI_DTYPE_BF16:
-        launch_kernel<nv_bfloat16>(output, input, _info, stream);
+        // Moore 架构下 BF16 类型
+        launch_kernel<__mt_bfloat16>(output, input, _info, stream);
         break;
     case INFINI_DTYPE_F32:
         launch_kernel<float>(output, input, _info, stream);
@@ -110,7 +109,7 @@ infiniStatus_t Descriptor::calculate(
     case INFINI_DTYPE_F64:
         launch_kernel<double>(output, input, _info, stream);
         break;
-    // Nearest Neighbor 插值通常也支持整型 (如 Mask 处理)
+    // 整型支持
     case INFINI_DTYPE_U8:
         launch_kernel<uint8_t>(output, input, _info, stream);
         break;
@@ -142,4 +141,4 @@ infiniStatus_t Descriptor::calculate(
     return INFINI_STATUS_SUCCESS;
 }
 
-} // namespace op::upsample_nearest::nvidia
+} // namespace op::upsample_nearest::moore

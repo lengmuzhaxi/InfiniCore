@@ -1,10 +1,13 @@
-#include "triplet_margin_with_distance_loss_nvidia.cuh"
-#include "../cuda/kernel.cuh" 
+#include "triplet_margin_with_distance_loss_moore.h"
+#include"triplet_margin_with_distance_loss_moore_kernel.h"
 #include "../../../handle.h"
+#include <musa_runtime.h>
+#include <musa_fp16.h>
+#include <musa_bf16.h>
 #include <cstdint>
 #include <algorithm>
 
-namespace op::triplet_margin_with_distance_loss::nvidia {
+namespace op::triplet_margin_with_distance_loss::moore {
 
 struct Descriptor::Opaque {
     size_t batch_size;
@@ -29,7 +32,8 @@ void launch_kernel(
     auto pos_ptr = reinterpret_cast<const T *>(positive);
     auto neg_ptr = reinterpret_cast<const T *>(negative);
     
-    auto cuda_stream = reinterpret_cast<cudaStream_t>(stream);
+    // MUSA 流转换
+    auto musa_stream = reinterpret_cast<musaStream_t>(stream);
     
     float margin = info.margin();
     int swap = info.swap();
@@ -44,11 +48,14 @@ void launch_kernel(
 
     // 1. 初始化 Accumulator
     if (reduction != 0) {
-        cudaMemsetAsync(ws_ptr, 0, sizeof(float), cuda_stream);
+        // 将 float workspace 清零，使用 musaMemsetAsync
+        musaMemsetAsync(ws_ptr, 0, sizeof(float), musa_stream);
     }
 
-    op::triplet_margin_with_distance_loss::cuda::triplet_margin_loss_kernel<T>
-        <<<grid_size, threads_per_block, 0, cuda_stream>>>(
+    // 2. 启动主 Kernel
+    // 假设 Kernel 定义在 op::triplet_margin_with_distance_loss::moore 命名空间下
+    op::triplet_margin_with_distance_loss::moore::triplet_margin_loss_kernel<T>
+        <<<grid_size, threads_per_block, 0, musa_stream>>>(
             out_ptr, 
             ws_ptr, // 传递 workspace
             anchor_ptr, 
@@ -63,8 +70,8 @@ void launch_kernel(
 
     // 3. 后处理: Cast & Mean
     if (reduction != 0) {
-        op::triplet_margin_with_distance_loss::cuda::cast_and_scale_kernel<T>
-            <<<1, 1, 0, cuda_stream>>>(
+        op::triplet_margin_with_distance_loss::moore::cast_and_scale_kernel<T>
+            <<<1, 1, 0, musa_stream>>>(
                 out_ptr, 
                 ws_ptr, 
                 batch_size,
@@ -99,6 +106,7 @@ infiniStatus_t Descriptor::create(
     auto opaque = new Opaque();
     opaque->batch_size = batch_size;
     opaque->feature_dim = feature_dim;
+    // Reduction 时需要一个 float 的 workspace 来存累加和
     size_t workspace_size = (reduction != 0) ? sizeof(float) : 0;
 
     *desc_ptr = new Descriptor(opaque, info_result.take(), workspace_size, handle->device, handle->device_id);
@@ -123,7 +131,7 @@ infiniStatus_t Descriptor::calculate(
         launch_kernel<half>(output, workspace, anchor, positive, negative, _info, batch_size, feature_dim, stream);
         break;
     case INFINI_DTYPE_BF16:
-        launch_kernel<nv_bfloat16>(output, workspace, anchor, positive, negative, _info, batch_size, feature_dim, stream);
+        launch_kernel<__mt_bfloat16>(output, workspace, anchor, positive, negative, _info, batch_size, feature_dim, stream);
         break;
     case INFINI_DTYPE_F32:
         launch_kernel<float>(output, workspace, anchor, positive, negative, _info, batch_size, feature_dim, stream);
@@ -138,4 +146,4 @@ infiniStatus_t Descriptor::calculate(
     return INFINI_STATUS_SUCCESS;
 }
 
-} // namespace op::triplet_margin_with_distance_loss::nvidia
+} // namespace op::triplet_margin_with_distance_loss::moore

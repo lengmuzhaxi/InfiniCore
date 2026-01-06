@@ -1,20 +1,12 @@
-#ifndef __UPSAMPLE_NEAREST_CUDA_CUH__
-#define __UPSAMPLE_NEAREST_CUDA_CUH__
-
-#include <cuda_runtime.h>
-#if defined ENABLE_METAX_API
-    #include <maca_fp16.h>
-    #include <maca_bfloat16.h>
-    using nv_bfloat162 = __maca_bfloat162;
-#else
-    #include <cuda_fp16.h>
-    #include <cuda_bf16.h>
-#endif
-
+#ifndef __UPSAMPLE_NEAREST_MOORE_KERNEL_H__
+#define __UPSAMPLE_NEAREST_MOORE_KERNEL_H__
+#include <musa_runtime.h>
+#include <musa_fp16.h>
+#include <musa_bf16.h>
 #include <cmath>
 #include <cstdio>
 
-namespace op::upsample_nearest::cuda {
+namespace op::upsample_nearest::moore {
 __device__ __forceinline__ int get_nearest_index(
     int out_index,
     float scale,
@@ -34,6 +26,8 @@ __global__ void upsample_nearest_kernel(
     size_t W_out,
     float scale_h,                  // 预计算的缩放比例 (in_size / out_size)
     float scale_w) {                // 预计算的缩放比例 (in_size / out_size)
+
+    // Grid-Stride Loop: 处理每一个输出元素
     size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
     size_t total_elements = N * C * H_out * W_out;
     size_t stride = blockDim.x * gridDim.x;
@@ -51,12 +45,11 @@ __global__ void upsample_nearest_kernel(
         // 2. 计算源索引 (Source Indices)
         int h_in_idx = get_nearest_index(static_cast<int>(h_out_idx), scale_h, static_cast<int>(H_in));
         int w_in_idx = get_nearest_index(static_cast<int>(w_out_idx), scale_w, static_cast<int>(W_in));
-        // Input layout: [N, C, H_in, W_in]
         size_t in_offset = (n_idx * C + c_idx) * H_in * W_in + h_in_idx * W_in + w_in_idx;
         output[i] = input[in_offset];
     }
 }
 
-} // namespace op::upsample_nearest::cuda
+} // namespace op::upsample_nearest::moore
 
-#endif // __UPSAMPLE_NEAREST_CUDA_CUH__
+#endif // __UPSAMPLE_NEAREST_MOORE_KERNEL_H__

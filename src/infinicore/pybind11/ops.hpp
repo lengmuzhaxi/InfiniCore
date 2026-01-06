@@ -30,7 +30,6 @@
 #include "ops/logaddexp2.hpp"
 #include "ops/matmul.hpp"
 #include "ops/multi_margin_loss.hpp"
-#include "ops/margin_ranking_loss.hpp"
 #include "ops/triplet_margin_loss.hpp"
 #include "ops/mul.hpp"
 #include "ops/paged_attention.hpp"
@@ -40,8 +39,6 @@
 #include "ops/rms_norm.hpp"
 #include "ops/rope.hpp"
 #include "ops/silu.hpp"
-#include "ops/softshrink.hpp"
-#include "ops/split.hpp"
 #include "ops/scatter.hpp"
 #include "ops/smooth_l1_loss.hpp"
 #include "ops/swiglu.hpp"
@@ -85,7 +82,6 @@ inline void bind(py::module &m) {
     bind_matmul(m);
     bind_mul(m);
     bind_multi_margin_loss(m);
-    bind_margin_ranking_loss(m);
     bind_triplet_margin_loss(m);
     bind_paged_attention(m);
     bind_paged_caching(m);
@@ -93,11 +89,8 @@ inline void bind(py::module &m) {
     bind_rms_norm(m);
     bind_silu(m);
     bind_scatter(m);
-    bind_softshrink(m);
     bind_smooth_l1_loss(m);
     bind_swiglu(m);
-    bind_softshrink(m);
-    bind_split(m);
     bind_take(m);
     bind_vander(m);
     bind_unfold(m);
