@@ -66,9 +66,8 @@ class OpTest(BaseOperatorTest):
         # infinicore.split signature differs; test runner will map kwargs accordingly
         return torch.split(*args, **kwargs)
 
-    # def infinicore_operator(self, *args, **kwargs):
-    #     """InfiniCore implementation (operator not yet available)."""
-    #     return infinicore.split(*args, **kwargs)
+    def infinicore_operator(self, *args, **kwargs):
+         return infinicore.split(*args, **kwargs)
 
 
 def main():

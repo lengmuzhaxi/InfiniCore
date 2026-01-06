@@ -33,7 +33,6 @@ infiniStatus_t Descriptor::create(
 
     auto handle = reinterpret_cast<device::cpu::Handle *>(handle_);
     
-    // 创建 Info 对象
     auto result = TripletMarginLossInfo::create(out_desc, anchor_desc, positive_desc, negative_desc, margin, p, eps, swap, reduction);
     CHECK_RESULT(result);
 
@@ -48,28 +47,32 @@ infiniStatus_t Descriptor::create(
     return INFINI_STATUS_SUCCESS;
 }
 
-// 辅助函数：计算两个向量之间的 p-范数距离
+// 【终极修正】：完全对齐 PyTorch CPU 端 Forward 行为，不加 eps
 template <typename T>
-inline float compute_distance(const T* x, const T* y, size_t D, int p, float eps) {
-    float sum = 0.0f;
-    for (size_t i = 0; i < D; ++i) {
-        float diff = std::abs(utils::cast<float>(x[i]) - utils::cast<float>(y[i]));
-        if (p == 1) {
-            sum += diff;
-        } else if (p == 2) {
-            sum += diff * diff;
-        } else {
-            sum += std::pow(diff, static_cast<float>(p));
-        }
-    }
-
+inline double compute_distance_stable(const T* x, const T* y, size_t D, int p) {
+    double sum = 0.0;
+    
     if (p == 1) {
-        return sum+eps;
-    } else if (p == 2) {
-        // 标准 TripletMarginLoss 在 p=2 时通常加上 eps 再开方
-        return std::sqrt(sum + eps);
-    } else {
-        return std::pow(sum + eps, 1.0f / static_cast<float>(p));
+        for (size_t i = 0; i < D; ++i) {
+            double diff = std::abs(utils::cast<double>(x[i]) - utils::cast<double>(y[i]));
+            sum += diff;
+        }
+        return sum; 
+    } 
+    else if (p == 2) {
+        for (size_t i = 0; i < D; ++i) {
+            double diff = utils::cast<double>(x[i]) - utils::cast<double>(y[i]);
+            sum += diff * diff;
+        }
+        return std::sqrt(sum);
+    } 
+    else {
+        double p_d = static_cast<double>(p);
+        for (size_t i = 0; i < D; ++i) {
+            double diff = std::abs(utils::cast<double>(x[i]) - utils::cast<double>(y[i]));
+            sum += std::pow(diff, p_d);
+        }
+        return std::pow(sum, 1.0 / p_d);
     }
 }
 
@@ -83,9 +86,8 @@ void calculate_cpu_impl(
 
     size_t N = info.batch_size();
     size_t D = info.feature_dim();
-    float margin = info.margin();
+    double margin = static_cast<double>(info.margin());
     int p = info.p();
-    float eps = info.eps();
     bool swap = info.swap();
     int reduction = info.reduction();
 
@@ -94,57 +96,55 @@ void calculate_cpu_impl(
     auto pos_ptr = reinterpret_cast<const T *>(positive);
     auto neg_ptr = reinterpret_cast<const T *>(negative);
 
-    // Reduction == 0: None
-    if (reduction == 0) {
-        #pragma omp parallel for schedule(static)
-        for (size_t n = 0; n < N; ++n) {
-            const T* a_row = anc_ptr + n * D;
-            const T* p_row = pos_ptr + n * D;
-            const T* n_row = neg_ptr + n * D;
+    // 特判 N=1
+    if (N == 1) {
+        double d_p = compute_distance_stable(anc_ptr, pos_ptr, D, p);
+        double d_n = compute_distance_stable(anc_ptr, neg_ptr, D, p);
 
-            float dist_pos = compute_distance(a_row, p_row, D, p, eps);
-            float dist_neg = compute_distance(a_row, n_row, D, p, eps);
-
-            if (swap) {
-                float dist_swap = compute_distance(p_row, n_row, D, p, eps);
-                if (dist_swap < dist_neg) {
-                    dist_neg = dist_swap;
-                }
-            }
-
-            // loss = max(0, dist_pos - dist_neg + margin)
-            float loss = std::max(0.0f, dist_pos - dist_neg + margin);
-            out_ptr[n] = utils::cast<T>(loss);
+        if (swap) {
+            double d_s = compute_distance_stable(pos_ptr, neg_ptr, D, p);
+            if (d_s < d_n) d_n = d_s;
         }
-    } 
-    // Reduction != 0: Mean or Sum
-    else {
-        double total_loss = 0.0;
 
-        #pragma omp parallel for reduction(+:total_loss) schedule(static)
+        double loss = std::max(0.0, d_p - d_n + margin);
+        out_ptr[0] = utils::cast<T>(static_cast<float>(loss));
+        return;
+    }
+
+    // N > 1 的确定性处理
+    std::vector<double> losses(N);
+
+    #pragma omp parallel for schedule(static)
+    for (size_t n = 0; n < N; ++n) {
+        const T* a_row = anc_ptr + n * D;
+        const T* p_row = pos_ptr + n * D;
+        const T* n_row = neg_ptr + n * D;
+
+        double d_p = compute_distance_stable(a_row, p_row, D, p);
+        double d_n = compute_distance_stable(a_row, n_row, D, p);
+
+        if (swap) {
+            double d_s = compute_distance_stable(p_row, n_row, D, p);
+            if (d_s < d_n) d_n = d_s;
+        }
+
+        losses[n] = std::max(0.0, d_p - d_n + margin);
+    }
+
+    if (reduction == 0) { // None
         for (size_t n = 0; n < N; ++n) {
-            const T* a_row = anc_ptr + n * D;
-            const T* p_row = pos_ptr + n * D;
-            const T* n_row = neg_ptr + n * D;
-
-            float dist_pos = compute_distance(a_row, p_row, D, p, eps);
-            float dist_neg = compute_distance(a_row, n_row, D, p, eps);
-
-            if (swap) {
-                float dist_swap = compute_distance(p_row, n_row, D, p, eps);
-                if (dist_swap < dist_neg) {
-                    dist_neg = dist_swap;
-                }
-            }
-
-            float loss = std::max(0.0f, dist_pos - dist_neg + margin);
-            total_loss += static_cast<double>(loss);
+            out_ptr[n] = utils::cast<T>(static_cast<float>(losses[n]));
+        }
+    } else { 
+        double total_loss = 0.0;
+        // 顺序求和
+        for (double l : losses) {
+            total_loss += l;
         }
 
         if (reduction == 1) { // Mean
             total_loss /= static_cast<double>(N);
         }
-
         out_ptr[0] = utils::cast<T>(static_cast<float>(total_loss));
     }
 }

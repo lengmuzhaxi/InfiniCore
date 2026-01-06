@@ -23,6 +23,11 @@
 #include "ops/logcumsumexp.hpp"
 #include "ops/logical_and.hpp" 
 #include "ops/logical_not.hpp" 
+#include "ops/upsample_nearest.hpp"
+#include "ops/log_softmax.hpp"
+#include "ops/triplet_margin_with_distance_loss.hpp"
+#include "ops/logaddexp.hpp"
+#include "ops/logaddexp2.hpp"
 #include "ops/matmul.hpp"
 #include "ops/multi_margin_loss.hpp"
 #include "ops/margin_ranking_loss.hpp"
@@ -35,6 +40,8 @@
 #include "ops/rms_norm.hpp"
 #include "ops/rope.hpp"
 #include "ops/silu.hpp"
+#include "ops/softshrink.hpp"
+#include "ops/split.hpp"
 #include "ops/scatter.hpp"
 #include "ops/smooth_l1_loss.hpp"
 #include "ops/swiglu.hpp"
@@ -70,6 +77,11 @@ inline void bind(py::module &m) {
     bind_logcumsumexp(m);
     bind_logical_and(m); 
     bind_logical_not(m); 
+    bind_log_softmax(m); 
+    bind_upsample_nearest(m);
+    bind_triplet_margin_with_distance_loss(m);
+    bind_logaddexp(m); 
+    bind_logaddexp2(m); 
     bind_matmul(m);
     bind_mul(m);
     bind_multi_margin_loss(m);
@@ -81,8 +93,11 @@ inline void bind(py::module &m) {
     bind_rms_norm(m);
     bind_silu(m);
     bind_scatter(m);
+    bind_softshrink(m);
     bind_smooth_l1_loss(m);
     bind_swiglu(m);
+    bind_softshrink(m);
+    bind_split(m);
     bind_take(m);
     bind_vander(m);
     bind_unfold(m);

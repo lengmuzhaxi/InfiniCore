@@ -17,7 +17,9 @@ from .upsample_bilinear import upsample_bilinear, interpolate
 from infinicore.ops.smooth_l1_loss import smooth_l1_loss
 from .triplet_margin_loss import triplet_margin_loss 
 from .pairwise_distance import pairwise_distance
-
+from .log_softmax import log_softmax
+from .upsample_nearest import upsample_nearest, interpolate
+from .triplet_margin_with_distance_loss import triplet_margin_with_distance_loss
 __all__ = [
     "adaptive_avg_pool1d",
     "affine_grid",  
@@ -39,6 +41,9 @@ __all__ = [
     "pairwise_distance",
     "embedding",
     "rope",
+    "log_softmax",
+    "upsample_nearest",
+    "triplet_margin_with_distance_loss",
     "unfold",
     "RopeAlgo",
 ]

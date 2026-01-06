@@ -17,8 +17,16 @@ thread_local common::OpCache<size_t, infiniopTripletMarginLossDescriptor_t> cach
     });
 
 void calculate(Tensor output, Tensor anchor, Tensor positive, Tensor negative, float margin, int64_t p, float eps, bool swap, int64_t reduction) {
+    
+    // 【修改点 1】强制 Tensor 连续化
+    // 这解决了因 Stride (如 strides=(40, 5)) 导致的指针访问越界或数据偏移错误
+    auto anchor_c = anchor->contiguous();
+    auto positive_c = positive->contiguous();
+    auto negative_c = negative->contiguous();
+
     // 1. 计算 Hash Seed 作为 Cache Key
-    size_t seed = hash_combine(output, anchor, positive, negative, margin, p, eps, swap, reduction);
+    // 确保包含所有标量参数，防止不同 eps 的用例误命中同一个 Descriptor
+    size_t seed = hash_combine(output, anchor_c, positive_c, negative_c, margin, p, eps, swap, reduction);
 
     auto device_type = context::getDevice().getType();
     auto device_index = context::getDevice().getIndex();
@@ -30,17 +38,18 @@ void calculate(Tensor output, Tensor anchor, Tensor positive, Tensor negative, f
 
     if (!desc_opt) {
         // 2. 创建描述符
+        // 使用连续化后的描述符创建
         INFINICORE_CHECK_ERROR(infiniopCreateTripletMarginLossDescriptor(
             context::getInfiniopHandle(output->device()), 
             &desc,
             output->desc(), 
-            anchor->desc(), 
-            positive->desc(), 
-            negative->desc(), 
+            anchor_c->desc(), 
+            positive_c->desc(), 
+            negative_c->desc(), 
             margin,
             static_cast<int>(p),
             eps,
-            static_cast<int>(swap),      // bool -> int
+            static_cast<int>(swap), 
             static_cast<int>(reduction)
         ));
         
@@ -54,14 +63,15 @@ void calculate(Tensor output, Tensor anchor, Tensor positive, Tensor negative, f
     INFINICORE_CHECK_ERROR(infiniopGetTripletMarginLossWorkspaceSize(desc, &workspace_size));
     std::shared_ptr<Memory> workspace = context::allocateMemory(workspace_size);
 
+    // 【修改点 2】执行时传入连续化后的数据指针 (anchor_c->data() 等)
     INFINICORE_CHECK_ERROR(infiniopTripletMarginLoss(
         desc, 
         workspace->data(), 
         workspace_size,
         output->data(), 
-        anchor->data(), 
-        positive->data(), 
-        negative->data(),
+        anchor_c->data(), 
+        positive_c->data(), 
+        negative_c->data(),
         context::getStream()
     ));
 }

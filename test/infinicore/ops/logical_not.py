@@ -18,16 +18,16 @@ from framework import (
 
 _TEST_CASES_DATA = [
     ((8, 8), None, None),
-    #((8, 8), (16, 1), None),
+    ((8, 8), (16, 1), None),
     ((8, 8), None, (0, 1)),
     ((2, 3, 4), None, None),
     ((1, 8), None, None),
-    #((16, 128), (256, 1), (256, 1)),
+    ((16, 128), (256, 1), (256, 1)),
 ]
 
 _TOLERANCE_MAP = {infinicore.bool: {"atol": 0, "rtol": 0}}
 
-_TENSOR_DTYPES = [infinicore.bool]
+_TENSOR_DTYPES = [infinicore.bool, infinicore.int32]
 
 
 def parse_test_cases():

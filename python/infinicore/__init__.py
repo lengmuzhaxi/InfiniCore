@@ -57,11 +57,13 @@ from infinicore.ops.kthvalue import kthvalue
 from infinicore.ops.index_copy import index_copy
 from infinicore.ops.acos import acos
 from infinicore.ops.scatter import scatter
+from infinicore.ops.split import split
 from infinicore.ops.matmul import matmul
 from infinicore.ops.mul import mul
 from infinicore.ops.vander import vander
 from infinicore.ops.narrow import narrow
 from infinicore.ops.rearrange import rearrange
+from infinicore.ops.logaddexp2 import logaddexp2
 from infinicore.tensor import (
     Tensor,
     empty,
@@ -153,7 +155,10 @@ __all__ = [
     "strided_from_blob",
     "take",
     "vander",
+    "split",
     "zeros",
+    "logaddexp",
+    "logaddexp2",
 ]
 
 use_ntops = False
