@@ -5,7 +5,11 @@
 #include "ops/adaptive_avg_pool1d.hpp"
 #include "ops/addbmm.hpp"
 #include "ops/add.hpp"
+<<<<<<< HEAD
 #include "ops/affine_grid.hpp" 
+=======
+#include "ops/add_rms_norm.hpp"
+>>>>>>> upstream/main
 #include "ops/attention.hpp"
 #include "ops/causal_softmax.hpp"
 #include "ops/embedding.hpp"
@@ -57,6 +61,7 @@ inline void bind(py::module &m) {
     bind_add(m);
     bind_affine_grid(m); 
     bind_addbmm(m);
+    bind_add_rms_norm(m);
     bind_attention(m);
     bind_causal_softmax(m);
     bind_random_sample(m);

@@ -40,7 +40,11 @@ from infinicore.dtype import (
     uint8,
 )
 from infinicore.ops.add import add
+<<<<<<< HEAD
 from infinicore.ops.addbmm import addbmm
+=======
+from infinicore.ops.add_rms_norm import add_rms_norm, add_rms_norm_
+>>>>>>> upstream/main
 from infinicore.ops.attention import attention
 from infinicore.ops.floor import floor
 from infinicore.ops.logcumsumexp import logcumsumexp
@@ -121,6 +125,8 @@ __all__ = [
     "acos",
     "add",
     "addbmm",
+    "add_rms_norm",
+    "add_rms_norm_",
     "attention",
     "index_add",
     "index_copy",
